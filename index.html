@@ -201,6 +201,7 @@ tr:last-child td { border-bottom:none }
   </div>
   <div class="nav-group">
     <span class="nav-label">Project</span>
+    <a class="nav-item" onclick="nav('brief',this)"><span class="nav-ico">?</span>Question framework</a>
     <a class="nav-item active" onclick="nav('home',this)"><span class="nav-ico">◈</span>Tipe project</a>
     <a class="nav-item" onclick="nav('flow',this)"><span class="nav-ico">⇄</span>Alur DE &amp; DS</a>
     <a class="nav-item" onclick="nav('setup',this)"><span class="nav-ico">▶</span>Cara mulai project</a>
@@ -235,6 +236,207 @@ tr:last-child td { border-bottom:none }
 </nav>
 
 <main class="main">
+
+<!-- ═══════════════════════════════════════════════ BRIEF / QUESTION FRAMEWORK -->
+<div id="page-brief" class="page">
+  <div class="ph">
+    <div class="ph-title">Question Framework — sebelum mulai project</div>
+    <div class="ph-desc">Pertanyaan yang perlu dipastikan ke klien atau user sebelum satu baris kode pun ditulis. Brief yang buruk = project yang salah arah.</div>
+  </div>
+
+  <div class="callout warn">
+    <div class="c-icon">⚠️</div>
+    <div class="c-body">
+      <div class="c-label">Jangan skip brief karena "sudah ngerti"</div>
+      <div class="c-text">Yang paling sering terjadi: DS langsung eksekusi berdasarkan asumsi, baru di akhir ketahuan bahwa definisi target berbeda, data yang dipakai ternyata tidak representatif, atau output yang dibuat tidak bisa ditindaklanjuti bisnis. Satu jam brief yang baik bisa hemat berminggu-minggu rework.</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">1 — Tujuan &amp; definisi sukses</div>
+    <div class="card">
+      <div class="card-desc" style="display:grid;gap:8px">
+        <div style="font-size:12px;color:var(--text3);font-style:italic;margin-bottom:2px">Confirm ini dulu — request awal sering bukan masalah sebenarnya</div>
+        <div class="two-col" style="gap:8px 20px">
+          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:7px">
+            <li>Masalah bisnisnya <strong>sebenarnya</strong> apa? (bukan solusi yang diminta — gali lebih dalam)</li>
+            <li>Kalau hasilnya bagus, <strong>keputusan apa</strong> yang akan diambil bisnis?</li>
+            <li>Siapa yang akan <strong>pakai output</strong> ini? Tim apa? Untuk proses apa?</li>
+          </ul>
+          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:7px">
+            <li><strong>Definisi sukses</strong> apa? Metric apa yang membuat semua pihak bilang "ini berhasil"?</li>
+            <li>Kalau model meleset, <strong>konsekuensinya ke bisnis</strong> seberapa besar? (False Positive vs False Negative mana yang lebih mahal?)</li>
+            <li>Ada <strong>benchmark atau target angka</strong> yang sudah disepakati?</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2 — Data</div>
+    <div class="card">
+      <div class="card-desc" style="display:grid;gap:8px">
+        <div style="font-size:12px;color:var(--text3);font-style:italic;margin-bottom:2px">Asumsi soal data adalah sumber terbesar rework di DS</div>
+        <div class="two-col" style="gap:8px 20px">
+          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:7px">
+            <li>Data apa yang tersedia? <strong>Di mana lokasinya?</strong> Format apa? Siapa yang bisa akses?</li>
+            <li><strong>Berapa lama historisnya?</strong> Apakah cukup untuk tujuan analisis?</li>
+            <li>Siapa yang <strong>maintain data</strong> ini? Masih aktif diupdate atau sudah stale?</li>
+            <li>Ada <strong>label / target variable</strong>? Kalau ada — siapa yang buat, bagaimana caranya, seberapa reliable?</li>
+          </ul>
+          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:7px">
+            <li>Data ini mewakili <strong>siapa / kondisi apa</strong>? Ada data yang tidak tercatat? (misal: hanya pelanggan aktif)</li>
+            <li>Ada <strong>event historis</strong> yang bisa "mengotori" data? (COVID, migrasi sistem, promo besar)</li>
+            <li>Ada data <strong>yang tidak boleh dipakai</strong>? (privasi, GDPR, data klien lain)</li>
+            <li>Kalau perlu data tambahan — <strong>siapa yang bisa menyediakan</strong> dan berapa lama?</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3 — Scope &amp; batasan</div>
+    <div class="card">
+      <div class="card-desc">
+        <div class="two-col" style="gap:8px 20px">
+          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:7px">
+            <li>Apa yang <strong>in-scope</strong> dan <strong>out-of-scope</strong>? (dokumentasikan eksplisit)</li>
+            <li><strong>Deadline kapan?</strong> Ada milestone di tengah yang harus dipenuhi?</li>
+            <li>Ada <strong>tools atau infra</strong> yang wajib dipakai? (tools klien, tools internal)</li>
+          </ul>
+          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:7px">
+            <li>Output perlu <strong>real-time</strong> atau batch cukup?</li>
+            <li>Apakah akan di-<strong>automate / production</strong> atau one-time analysis?</li>
+            <li>Ada <strong>constraint biaya</strong> infra atau compute yang perlu dipertimbangkan?</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">4 — Output &amp; delivery</div>
+    <div class="card">
+      <div class="card-desc">
+        <div class="two-col" style="gap:8px 20px">
+          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:7px">
+            <li><strong>Format output</strong> apa yang diharapkan: notebook, deck, dashboard, model API, atau tabel di BQ?</li>
+            <li>Siapa yang <strong>menerima dan membaca</strong> output ini? (technical atau non-technical?)</li>
+            <li>Apakah perlu <strong>presentasi</strong> ke klien, atau hanya serah terima file?</li>
+          </ul>
+          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:7px">
+            <li>Siapa yang perlu <strong>sign-off / approve</strong> sebelum deliver ke klien?</li>
+            <li>Apakah ada <strong>template atau format</strong> yang sudah dipakai sebelumnya?</li>
+            <li>Kalau ada revisi — <strong>siapa yang meminta</strong> dan lewat jalur apa?</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">5 — Asumsi &amp; domain knowledge</div>
+    <div class="card">
+      <div class="card-desc">
+        <div class="two-col" style="gap:8px 20px">
+          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:7px">
+            <li>Asumsi apa yang kita buat saat ini? <strong>Mana yang perlu dikonfirmasi</strong> ke domain expert?</li>
+            <li>Ada <strong>domain expert di klien</strong> yang bisa dihubungi untuk validasi logika bisnis?</li>
+          </ul>
+          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:7px">
+            <li>Apa yang paling mungkin <strong>membuat project ini meleset</strong>? (risiko data, risiko scope)</li>
+            <li>Apakah ada project serupa sebelumnya yang bisa <strong>dijadikan referensi</strong>?</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Real-world messy cases — yang sering tidak ditanya tapi krusial</div>
+
+    <div class="callout dont">
+      <div class="c-icon">❌</div>
+      <div class="c-body">
+        <div class="c-label">Data survivorship bias — hanya mencatat yang "berhasil"</div>
+        <div class="c-text">Contoh: data transaksi hanya berisi pelanggan yang jadi beli — pelanggan yang pergi sebelum checkout tidak ada. Model yang ditraining di data ini tidak akan tahu ciri-ciri orang yang tidak jadi beli. <strong>Tanya:</strong> apakah data ini mencatat semua kejadian, atau hanya yang berhasil?</div>
+      </div>
+    </div>
+
+    <div class="callout dont">
+      <div class="c-icon">❌</div>
+      <div class="c-body">
+        <div class="c-label">Label noise — target variable tidak bisa dipercaya penuh</div>
+        <div class="c-text">Contoh: label "churn" dibuat manual oleh CS berdasarkan perasaan, bukan definisi yang konsisten. Model akan belajar dari label yang salah. <strong>Tanya:</strong> bagaimana cara label ini dibuat? Siapa yang membuat? Ada SOP-nya tidak?</div>
+      </div>
+    </div>
+
+    <div class="callout dont">
+      <div class="c-icon">❌</div>
+      <div class="c-body">
+        <div class="c-label">Historical event yang "kotor" — data tidak mencerminkan kondisi normal</div>
+        <div class="c-text">Contoh: data 2020–2021 terpengaruh COVID sehingga pola belinya sangat tidak normal. Kalau ini dipakai untuk training model yang akan jalan di 2025, hasilnya bisa sangat menyesatkan. <strong>Tanya:</strong> ada periode atau event yang sebaiknya dikeluarkan dari training?</div>
+      </div>
+    </div>
+
+    <div class="callout dont">
+      <div class="c-icon">❌</div>
+      <div class="c-body">
+        <div class="c-label">Distribusi production berbeda dari historical — concept drift</div>
+        <div class="c-text">Contoh: model ditraining dari data pelanggan lama, tapi akan dipakai untuk pelanggan baru yang profilnya berbeda. <strong>Tanya:</strong> apakah kondisi saat model dipakai nanti akan mirip dengan data training? Apakah ada perubahan produk, harga, atau segmen yang signifikan?</div>
+      </div>
+    </div>
+
+    <div class="callout dont">
+      <div class="c-icon">❌</div>
+      <div class="c-body">
+        <div class="c-label">Scope creep — klien minta tambah di tengah jalan</div>
+        <div class="c-text">Request awal: "analisis churn." Di tengah jalan muncul: "sekalian bikin segmentasi", "sekalian bikin dashboard", "sekalian predict revenue." <strong>Cara handle:</strong> dokumentasikan scope di brief, buat perubahan scope menjadi keputusan eksplisit yang perlu sign-off senior — bukan iya saja.</div>
+      </div>
+    </div>
+
+    <div class="callout dont">
+      <div class="c-icon">❌</div>
+      <div class="c-body">
+        <div class="c-label">Target tidak jelas — "buat model yang bagus"</div>
+        <div class="c-text">"Bagus" tidak bisa diukur. Bagus menurut siapa? Di metric apa? Dibanding apa? Tanpa ini, DS akan buang waktu di arah yang salah atau tidak tahu kapan selesai. <strong>Tanya:</strong> kalau saya tunjukkan hasil model besok, angka atau bukti apa yang akan membuat kamu bilang "ini sudah cukup bagus"?</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Template catatan brief (simpan di README atau Notion)</div>
+    <div class="code-wrap"><pre>## Brief Project — [nama project] — [tanggal]
+
+### Tujuan
+- Masalah bisnis    : [isi]
+- Definisi sukses   : [metric + angka target]
+- Pengguna output   : [tim / role]
+- Keputusan bisnis  : [apa yang akan dilakukan kalau hasilnya X]
+
+### Data
+- Sumber data       : [BQ table / GCS / CSV — path lengkap]
+- Periode           : [dari ... s.d. ...]
+- Label / target    : [kolom apa, cara pembuatannya]
+- Catatan data      : [event historis, data yang dikeluarkan, bias yang diketahui]
+
+### Scope
+- In-scope          : [list eksplisit]
+- Out-of-scope      : [list eksplisit]
+- Deadline          : [tanggal]
+- Output format     : [notebook / deck / dashboard / model]
+
+### Asumsi yang perlu dikonfirmasi
+- [ ] [asumsi 1] — konfirmasi ke [nama/tim]
+- [ ] [asumsi 2] — konfirmasi ke [nama/tim]
+
+### Risiko
+- [risiko 1] — mitigasi: [isi]
+- [risiko 2] — mitigasi: [isi]</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+</div>
 
 <!-- ═══════════════════════════════════════════════ HOME -->
 <div id="page-home" class="page active">
