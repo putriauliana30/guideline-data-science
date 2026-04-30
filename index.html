@@ -273,7 +273,7 @@ tr:last-child td { border-bottom:none }
 ├── data/raw/              # CSV pendukung (mapping, referensi)
 ├── notebooks/
 │   ├── 01_eda_[topik].ipynb
-│   └── 02_export_dashboard.ipynb
+│   └── 02_export_dashboard_[topik].ipynb
 ├── outputs/
 │   ├── dashboard/         # CSV → GCS / BQ
 │   └── reports/           # grafik, PDF
@@ -288,8 +288,8 @@ tr:last-child td { border-bottom:none }
 ├── data/raw/
 ├── notebooks/
 │   ├── 01_eda_[topik].ipynb
-│   ├── 02_ads_feature_engineering.ipynb
-│   └── 03_modelling.ipynb
+│   ├── 02_feature_engineering_[topik].ipynb
+│   └── 03_modelling_[topik].ipynb
 ├── src/
 │   ├── __init__.py
 │   ├── ingestion.py
@@ -316,30 +316,87 @@ tr:last-child td { border-bottom:none }
       <div class="c-text">
         <div style="display:grid;gap:10px;margin-top:4px">
           <div>
-            <strong>1. Notebook harus bisa Restart &amp; Run All</strong> — tanpa error, oleh siapapun.<br>
-            <div style="display:flex;gap:8px;margin-top:4px;font-size:11px">
+            <strong>1. Notebook harus bisa Restart &amp; Run All</strong> — tanpa error, oleh siapapun.
+            <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:6px 10px;align-items:start;margin-top:6px;font-size:11px">
               <span style="color:var(--red)">❌ Ada sel yang harus dijalankan manual di tengah, variabel dari run sebelumnya masih di memory</span>
-              <span style="flex-shrink:0">→</span>
+              <span style="padding-top:1px">→</span>
               <span style="color:var(--green)">✅ Kernel → Restart &amp; Run All langsung selesai tanpa error</span>
             </div>
           </div>
           <div>
-            <strong>2. Credentials tidak boleh masuk Git</strong> — <code>.env</code> dan <code>.json</code> selalu di <code>.gitignore</code>.<br>
-            <div style="display:flex;gap:8px;margin-top:4px;font-size:11px">
-              <span style="color:var(--red)">❌ <code>GCP_PROJECT_ID = "nama-project"</code> ditulis langsung di notebook atau <code>.env</code> ikut di-commit</span>
-              <span style="flex-shrink:0">→</span>
-              <span style="color:var(--green)">✅ <code>os.getenv('GCP_PROJECT_ID')</code> + <code>.env</code> ada di <code>.gitignore</code></span>
+            <strong>2. Credentials tidak boleh masuk Git</strong> — password &amp; project ID disimpan di file terpisah, bukan di kode.
+            <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:6px 10px;align-items:start;margin-top:6px;font-size:11px">
+              <span style="color:var(--red)">❌ <code>GCP_PROJECT_ID = "nama-project"</code> ditulis langsung di notebook, atau file <code>.env</code> ikut di-commit</span>
+              <span style="padding-top:1px">→</span>
+              <span style="color:var(--green)">✅ Simpan di <code>.env</code>, baca dengan <code>os.getenv('GCP_PROJECT_ID')</code>, dan pastikan <code>.env</code> ada di <code>.gitignore</code></span>
             </div>
           </div>
           <div>
-            <strong>3. Path harus relatif</strong> — tidak ada <code>C:/Users/Budi/Desktop/...</code> di kode.<br>
-            <div style="display:flex;gap:8px;margin-top:4px;font-size:11px">
+            <strong>3. Path harus relatif</strong> — tidak ada <code>C:/Users/Budi/Desktop/...</code> di kode.
+            <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:6px 10px;align-items:start;margin-top:6px;font-size:11px">
               <span style="color:var(--red)">❌ <code>pd.read_csv("C:/Users/Budi/Desktop/data.csv")</code></span>
-              <span style="flex-shrink:0">→</span>
+              <span style="padding-top:1px">→</span>
               <span style="color:var(--green)">✅ <code>pd.read_csv(PROJECT_ROOT / 'data' / 'raw' / 'data.csv')</code></span>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Apa itu .env dan .gitignore?</div>
+
+    <div class="two-col">
+      <div>
+        <div class="col-label">.env — file rahasia lokal</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:8px">
+          File teks biasa berisi variabel rahasia — project ID, password, API key.
+          File ini <strong>tidak pernah di-upload ke Git</strong> dan tidak dibagikan ke siapapun.
+          Satu baris = satu variabel, formatnya <code>NAMA=nilai</code>.
+        </p>
+        <div class="col-label" style="margin-top:4px">Contoh isi <code>.env</code></div>
+        <div class="code-wrap">
+          <pre>GCP_PROJECT_ID=nama-project-gcp
+GCP_SA_PATH=/path/ke/service-account.json
+API_KEY=abc123secret</pre>
+          <button class="copy-btn" onclick="cp(this)">Copy</button>
+        </div>
+      </div>
+      <div>
+        <div class="col-label">.gitignore — daftar file yang Git abaikan</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:8px">
+          File yang memberitahu Git: "jangan upload file-file ini ke GitHub."
+          Kalau <code>.env</code> sudah ada di <code>.gitignore</code>, rahasianya aman
+          meskipun kamu lupa — Git otomatis mengabaikannya.
+        </p>
+        <div class="col-label" style="margin-top:4px">Contoh isi <code>.gitignore</code></div>
+        <div class="code-wrap">
+          <pre>.env
+*.json
+__pycache__/
+.ipynb_checkpoints/</pre>
+          <button class="copy-btn" onclick="cp(this)">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-label" style="margin-top:4px">Cara baca <code>.env</code> di Python</div>
+    <div class="code-wrap">
+      <pre>from dotenv import load_dotenv
+import os
+
+load_dotenv()  # baca file .env
+
+project_id = os.getenv('GCP_PROJECT_ID')
+api_key    = os.getenv('API_KEY')</pre>
+      <button class="copy-btn" onclick="cp(this)">Copy</button>
+    </div>
+    <div class="callout tip" style="margin-top:12px">
+      <div class="c-icon">💡</div>
+      <div class="c-body">
+        <div class="c-label">Perlu install dulu</div>
+        <div class="c-text">Jalankan <code>pip install python-dotenv</code> satu kali di environment kamu agar <code>load_dotenv()</code> bisa dipakai.</div>
       </div>
     </div>
   </div>
