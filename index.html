@@ -963,6 +963,370 @@ print(f"Improvement vs baseline: {improvement:.1f}%")
 if improvement < 5:
     print("⚠ < 5% lebih baik dari baseline — diskusikan dengan senior")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
   </div>
+
+  <div class="section">
+    <div class="section-title">Cara membaca hasil model</div>
+    <div class="callout warn">
+      <div class="c-icon">⚠️</div>
+      <div class="c-body">
+        <div class="c-label">Feature importance saja tidak cukup — ini yang sering dilewatkan</div>
+        <div class="c-text">Feature importance hanya menjawab <strong>"feature mana yang paling sering dipakai model"</strong> — tidak menjawab apakah pengaruhnya positif atau negatif, tidak cocok untuk feature yang saling berkorelasi (importancenya bisa terbagi dua), dan tidak bisa dipakai untuk menjelaskan satu prediksi spesifik ke klien.</div>
+      </div>
+    </div>
+
+    <table>
+      <tr><th>Metode</th><th>Pertanyaan yang dijawab</th><th>Kapan pakai</th></tr>
+      <tr><td><strong>Feature Importance</strong></td><td>Feature mana yang paling berpengaruh?</td><td>Quick check awal — tapi jangan berhenti di sini</td></tr>
+      <tr><td><strong>Permutation Importance</strong></td><td>Kalau feature ini diacak, seberapa parah model drop?</td><td>Cross-check importance, lebih andal untuk feature berkorelasi</td></tr>
+      <tr><td><strong>SHAP Values</strong></td><td>Kenapa prediksi ini tinggi/rendah? Arahnya apa?</td><td>Penjelasan paling lengkap — wajib untuk explain ke klien</td></tr>
+      <tr><td><strong>PDP / ICE Plot</strong></td><td>Kalau nilai feature X naik, prediksi ikut naik atau turun?</td><td>Cek arah dan bentuk pengaruh sebuah feature</td></tr>
+      <tr><td><strong>Error Analysis</strong></td><td>Di mana dan kenapa model salah?</td><td>Sebelum final — cari pola kesalahan</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">1 — Feature Importance (built-in tree models)</div>
+    <div class="card">
+      <div class="card-title">Yang dilihat &amp; keterbatasannya</div>
+      <div class="card-desc" style="margin-bottom:10px">Feature importance mengukur <strong>seberapa sering dan seberapa jauh</strong> sebuah feature membantu memisahkan data di dalam pohon keputusan. Angkanya tidak punya satuan — yang penting adalah <em>urutan relatifnya</em>.</div>
+      <div class="two-col">
+        <div>
+          <div class="col-label">✅ Bisa dipakai untuk</div>
+          <ul style="margin:6px 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
+            <li>Lihat 5–10 feature teratas secara cepat</li>
+            <li>Identifikasi feature yang <em>hampir tidak pernah dipakai</em> (importance ≈ 0)</li>
+            <li>Sanity check — apakah feature penting masuk akal bisnis?</li>
+          </ul>
+        </div>
+        <div>
+          <div class="col-label">❌ Jangan disalahartikan</div>
+          <ul style="margin:6px 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
+            <li>Importance tinggi ≠ pengaruh positif (bisa negatif!)</li>
+            <li>Dua feature berkorelasi tinggi → importancenya bisa terbagi</li>
+            <li>Tidak bisa jelaskan <em>satu prediksi spesifik</em></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="code-wrap"><pre>import pandas as pd
+
+feat_imp = (pd.Series(model.feature_importances_, index=feature_cols)
+              .sort_values(ascending=False))
+
+print(feat_imp.head(10))
+
+# ⚠ Importance tinggi tidak berarti pengaruhnya positif.
+# Selalu cek arah pengaruh pakai SHAP atau PDP setelah ini.</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2 — Permutation Importance (lebih andal)</div>
+    <div class="card">
+      <div class="card-title">Cara kerjanya</div>
+      <div class="card-desc">Acak nilai satu feature di test set, ukur seberapa jauh performa model turun. Semakin besar penurunannya, semakin penting feature itu. <strong>Tidak terpengaruh bias dari feature yang berkorelasi</strong> — cocok sebagai cross-check feature importance bawaan.</div>
+    </div>
+    <div class="code-wrap"><pre>from sklearn.inspection import permutation_importance
+
+result = permutation_importance(model, X_test, y_test, n_repeats=10, random_state=42)
+
+perm_imp = (pd.Series(result.importances_mean, index=feature_cols)
+              .sort_values(ascending=False))
+
+print(perm_imp.head(10))
+
+# Bandingkan dengan feature_importances_ bawaan model.
+# Kalau urutannya beda jauh → kemungkinan ada feature berkorelasi tinggi.</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3 — SHAP Values (penjelasan paling lengkap)</div>
+    <div class="callout tip"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Satu-satunya cara untuk jawab "kenapa model prediksi ini untuk baris ini?"</div><div class="c-text">SHAP menghitung kontribusi tiap feature terhadap satu prediksi — lengkap dengan arah (positif/negatif) dan besarnya. Ini yang dipakai untuk menjelaskan hasil model ke klien.</div></div></div>
+    <div class="code-wrap"><pre>import shap
+
+explainer   = shap.TreeExplainer(model)   # ganti dengan LinearExplainer / KernelExplainer jika bukan tree
+shap_values = explainer(X_test)
+
+# Summary plot — lihat semua feature: arah + besar pengaruh
+shap.summary_plot(shap_values, X_test, feature_names=feature_cols)
+# → Warna merah  = nilai feature tinggi
+# → Posisi kanan = mendorong prediksi naik
+# → Posisi kiri  = mendorong prediksi turun
+
+# Waterfall plot — jelaskan SATU prediksi spesifik
+shap.waterfall_plot(shap_values[0])   # ganti [0] dengan index baris yang ingin dijelaskan</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    <div class="callout do" style="margin-top:10px"><div class="c-icon">✅</div><div class="c-body"><div class="c-label">Install</div><div class="c-text"><code>pip install shap</code> — sudah kompatibel dengan scikit-learn, XGBoost, LightGBM, CatBoost.</div></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">4 — PDP / ICE Plot (cek arah pengaruh)</div>
+    <div class="card">
+      <div class="card-title">Kalau nilai feature X naik, prediksi naik atau turun?</div>
+      <div class="card-desc">Partial Dependence Plot (PDP) memperlihatkan hubungan rata-rata antara satu feature dengan prediksi, sementara feature lain dipegang tetap. Bagus untuk cross-check dengan logika bisnis: <em>"masuk akal tidak kalau recency makin tinggi → churn probability makin tinggi?"</em></div>
+    </div>
+    <div class="code-wrap"><pre>from sklearn.inspection import PartialDependenceDisplay
+
+# Ganti 'recency' dengan nama feature yang ingin dicek
+PartialDependenceDisplay.from_estimator(
+    model, X_test, features=['recency'],
+    feature_names=feature_cols, kind='both'   # 'both' = PDP + ICE sekaligus
+)</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">5 — Error Analysis (wajib sebelum final)</div>
+    <div class="callout dont"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Jangan kirim model tanpa tahu di mana dia salah</div><div class="c-text">Metric keseluruhan yang bagus bisa menyembunyikan masalah serius di segmen tertentu — misalnya model bagus untuk user lama tapi buruk untuk user baru.</div></div></div>
+    <div class="code-wrap"><pre>import pandas as pd
+
+df_err = X_test.copy()
+df_err['y_true']  = y_test.values
+df_err['y_pred']  = model.predict(X_test)
+df_err['error']   = (df_err['y_true'] - df_err['y_pred']).abs()
+
+# Lihat 20 prediksi terburuk
+print(df_err.nlargest(20, 'error'))
+
+# Cek apakah ada pola — error besar di segmen mana?
+print(df_err.groupby('segmen')['error'].mean().sort_values(ascending=False))
+# Ganti 'segmen' dengan kolom kategori yang relevan (misal: channel, region, tipe_user)</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Terjemahkan ke bisnis — template kalimat</div>
+    <div class="callout warn"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Angka metric bukan output — interpretasi bisnis yang output</div><div class="c-text">Jangan kirim "AUC = 0.82" tanpa penjelasan. Klien tidak tahu apa artinya. Terjemahkan ke bahasa bisnis yang bisa ditindaklanjuti.</div></div></div>
+    <div class="card">
+      <div class="card-title">Template kalimat interpretasi</div>
+      <div class="code-wrap" style="margin-top:8px"><pre># ❌ Kurang — hanya angka
+"Feature 'recency' memiliki importance 0.31."
+
+# ✅ Lebih baik — ada arah dan konteks
+"Pelanggan yang tidak bertransaksi dalam 90 hari terakhir (recency tinggi)
+ cenderung churn — ini adalah sinyal terkuat di model."
+
+# ❌ Kurang
+"AUC model = 0.82."
+
+# ✅ Lebih baik — ada implikasi bisnis
+"Dari 100 pelanggan yang diprediksi churn, sekitar 75 benar-benar churn.
+ Jika tim retention fokus ke 500 pelanggan berisiko tertinggi,
+ estimasi kita bisa mencegah ~375 churn bulan ini."</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Struktur penjelasan ke klien / senior</div>
+      <div class="card-desc">
+        <ol style="margin:6px 0 0 18px;padding:0;display:grid;gap:5px">
+          <li><strong>Feature utama</strong> — sebutkan 3–5 feature terpenting dengan arah pengaruhnya (naik/turun)</li>
+          <li><strong>Logika bisnis</strong> — apakah hasilnya masuk akal? kalau tidak, jelaskan kenapa</li>
+          <li><strong>Batasan model</strong> — di segmen mana model kurang akurat?</li>
+          <li><strong>Implikasi</strong> — apa yang bisa dilakukan bisnis berdasarkan hasil ini?</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Evaluasi model time series — yang berbeda dari data biasa</div>
+    <div class="callout warn">
+      <div class="c-icon">⚠️</div>
+      <div class="c-body">
+        <div class="c-label">Satu test set tidak cukup untuk time series</div>
+        <div class="c-text">Pada data biasa (cross-sectional), satu kali split sudah representatif. Pada time series, performa model bisa sangat berbeda tergantung <strong>periode mana yang jadi test set</strong> — model bisa bagus di kuartal normal tapi buruk saat peak season. Wajib evaluasi di <em>banyak window waktu</em>.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Perbedaan evaluasi time series vs data biasa</div>
+      <table style="margin:8px 0 0">
+        <tr><th>Aspek</th><th>Data biasa</th><th>Time series</th></tr>
+        <tr><td>Split</td><td>Random split satu kali</td><td>Walk-forward / expanding window</td></tr>
+        <tr><td>Metric utama</td><td>MAE, RMSE, AUC</td><td>MAE, RMSE, MAPE — <em>per horizon</em></td></tr>
+        <tr><td>Visual wajib</td><td>Confusion matrix / residual plot</td><td>Plot prediksi vs aktual sepanjang waktu</td></tr>
+        <tr><td>Cek tambahan</td><td>Error analysis per segmen</td><td>Cek residual autocorrelation</td></tr>
+        <tr><td>Tanda bermasalah</td><td>Overfit ke training set</td><td>Error drift, pola musiman di residual</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Walk-forward validation — evaluasi di banyak periode</div>
+    <div class="card">
+      <div class="card-title">Kenapa perlu</div>
+      <div class="card-desc">Daripada satu test set, model dievaluasi di beberapa window waktu yang berbeda. Ini memperlihatkan apakah performa model <strong>konsisten atau hanya bagus di satu periode</strong>. Kalau error di beberapa window jauh berbeda — model belum cukup stabil.</div>
+    </div>
+    <div class="code-wrap"><pre>from sklearn.model_selection import TimeSeriesSplit
+import numpy as np
+
+tscv    = TimeSeriesSplit(n_splits=5)
+results = []
+
+for fold, (train_idx, test_idx) in enumerate(tscv.split(X)):
+    X_tr, X_te = X.iloc[train_idx], X.iloc[test_idx]
+    y_tr, y_te = y.iloc[train_idx], y.iloc[test_idx]
+
+    model.fit(X_tr, y_tr)
+    y_pred = model.predict(X_te)
+
+    mae  = np.mean(np.abs(y_te - y_pred))
+    mape = np.mean(np.abs((y_te - y_pred) / (y_te + 1e-8))) * 100
+    results.append({'fold': fold + 1, 'MAE': mae, 'MAPE': mape,
+                    'periode': f"{y_te.index[0]} s.d. {y_te.index[-1]}"})
+
+import pandas as pd
+df_cv = pd.DataFrame(results)
+print(df_cv)
+print(f"\nMAE rata-rata : {df_cv['MAE'].mean():.2f}  (std: {df_cv['MAE'].std():.2f})")
+print(f"MAPE rata-rata: {df_cv['MAPE'].mean():.1f}%")
+
+# ⚠ Kalau std MAE-nya besar → performa tidak stabil antar periode</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Plot prediksi vs aktual — visual wajib</div>
+    <div class="callout dont"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Jangan hanya lihat angka MAE / MAPE — selalu plot dulu</div><div class="c-text">MAE yang bagus bisa menyembunyikan masalah serius: model yang selalu terlambat satu langkah (lagging), tidak bisa menangkap peak, atau drift di akhir periode. Semua ini hanya kelihatan dari grafik.</div></div></div>
+    <div class="code-wrap"><pre>import matplotlib.pyplot as plt
+
+fig, axes = plt.subplots(2, 1, figsize=(12, 7))
+
+# Plot 1 — prediksi vs aktual keseluruhan
+axes[0].plot(y_test.index, y_test.values, label='Aktual', linewidth=1.5)
+axes[0].plot(y_test.index, y_pred,        label='Prediksi', linewidth=1.5, linestyle='--')
+axes[0].set_title('Prediksi vs Aktual')
+axes[0].legend()
+
+# Plot 2 — error per titik waktu (cek apakah ada pola)
+residuals = y_test.values - y_pred
+axes[1].plot(y_test.index, residuals, color='gray', linewidth=1)
+axes[1].axhline(0, color='red', linestyle='--', linewidth=0.8)
+axes[1].set_title('Residual per Waktu — harusnya acak di sekitar 0')
+
+plt.tight_layout()
+plt.show()</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    <div class="card" style="margin-top:10px">
+      <div class="card-title">Yang dicari dari grafik</div>
+      <div class="two-col" style="margin-top:6px">
+        <div>
+          <div class="col-label">❌ Tanda masalah</div>
+          <ul style="margin:6px 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
+            <li><strong>Lagging</strong> — prediksi selalu ikut aktual tapi terlambat satu step</li>
+            <li><strong>Tidak bisa tangkap peak</strong> — prediksi datar waktu aktual spike</li>
+            <li><strong>Residual drift</strong> — error makin besar seiring waktu</li>
+            <li><strong>Pola musiman di residual</strong> — error selalu besar di bulan tertentu</li>
+          </ul>
+        </div>
+        <div>
+          <div class="col-label">✅ Yang diharapkan</div>
+          <ul style="margin:6px 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
+            <li>Prediksi mengikuti tren dan pola musiman aktual</li>
+            <li>Residual acak di sekitar nol (tidak ada pola sistematis)</li>
+            <li>Error tidak membesar seiring waktu</li>
+            <li>Peak dan lembah tertangkap (walau tidak harus sempurna)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Evaluasi per horizon — error makin jauh makin besar?</div>
+    <div class="card">
+      <div class="card-title">Kenapa penting</div>
+      <div class="card-desc">Forecast untuk 1 hari ke depan hampir selalu lebih akurat dari forecast 30 hari ke depan. Tapi seberapa cepat error meningkat? Ini menentukan seberapa jauh ke depan model bisa diandalkan untuk keputusan bisnis.</div>
+    </div>
+    <div class="code-wrap"><pre>import numpy as np
+import pandas as pd
+
+# Asumsikan y_test dan y_pred tersusun berurutan per tanggal
+df_horizon = pd.DataFrame({
+    'horizon': range(1, len(y_test) + 1),   # hari ke-1, ke-2, ...
+    'actuals': y_test.values,
+    'preds'  : y_pred
+})
+df_horizon['abs_error'] = (df_horizon['actuals'] - df_horizon['preds']).abs()
+
+# Kelompokkan per rentang horizon
+bins   = [0, 7, 14, 30, 60, 999]
+labels = ['1–7 hr', '8–14 hr', '15–30 hr', '31–60 hr', '60+ hr']
+df_horizon['range'] = pd.cut(df_horizon['horizon'], bins=bins, labels=labels)
+
+print(df_horizon.groupby('range', observed=True)['abs_error'].mean().round(2))
+
+# ⚠ Kalau error di 30+ hari jauh lebih besar dari 1–7 hari,
+#   rekomendasikan penggunaan model hanya untuk forecast jangka pendek.</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Cek residual — apakah masih ada pola yang terlewat?</div>
+    <div class="card">
+      <div class="card-title">Residual yang baik = acak, tanpa pola</div>
+      <div class="card-desc">Jika residual masih punya pola (tren, musiman, autocorrelation), artinya model <strong>belum menangkap semua informasi yang tersedia</strong> di data. Ada sinyal yang tertinggal — perlu tambah fitur atau ganti model.</div>
+    </div>
+    <div class="code-wrap"><pre>import numpy as np
+import matplotlib.pyplot as plt
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+from scipy import stats
+
+residuals = y_test.values - y_pred
+
+fig, axes = plt.subplots(1, 3, figsize=(14, 4))
+
+# ACF — autocorrelation residual. Harusnya tidak signifikan setelah lag 0
+plot_acf(residuals, lags=30, ax=axes[0])
+axes[0].set_title('ACF Residual')
+
+# PACF
+plot_pacf(residuals, lags=30, ax=axes[1])
+axes[1].set_title('PACF Residual')
+
+# Distribusi residual — cek apakah mendekati normal
+axes[2].hist(residuals, bins=30, edgecolor='white')
+axes[2].set_title('Distribusi Residual')
+
+plt.tight_layout()
+plt.show()
+
+# Uji formal autocorrelation (Ljung-Box)
+from statsmodels.stats.diagnostic import acorr_ljungbox
+lb = acorr_ljungbox(residuals, lags=[10], return_df=True)
+print(lb)
+# p-value > 0.05 → tidak ada autocorrelation signifikan (bagus)
+# p-value < 0.05 → masih ada autocorrelation → model perlu diperbaiki</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    <div class="callout tip" style="margin-top:10px"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Install statsmodels jika belum ada</div><div class="c-text"><code>pip install statsmodels</code> — dipakai untuk ACF/PACF plot dan uji Ljung-Box.</div></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Terjemahkan hasil model time series ke bisnis</div>
+    <div class="callout warn"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">MAPE 12% artinya apa untuk bisnis?</div><div class="c-text">Jangan biarkan klien menebak. Terjemahkan error ke satuan yang mereka pahami — unit produk, rupiah, atau persentase yang punya konteks nyata.</div></div></div>
+    <div class="card">
+      <div class="card-title">Template kalimat interpretasi time series</div>
+      <div class="code-wrap" style="margin-top:8px"><pre># ❌ Kurang jelas
+"MAPE model = 12%."
+
+# ✅ Lebih baik — ada konteks bisnis
+"Model meleset rata-rata 12% dari nilai aktual.
+ Untuk prediksi penjualan bulan depan senilai 1.000 unit,
+ model bisa meleset sekitar ±120 unit — pertimbangkan ini saat stok planning."
+
+# ❌ Kurang jelas
+"Feature lag_7 paling penting."
+
+# ✅ Lebih baik — ada interpretasi
+"Penjualan 7 hari lalu adalah sinyal terkuat untuk prediksi hari ini —
+ artinya pola mingguan sangat dominan di data ini.
+ Kalau ada event yang mempengaruhi penjualan minggu lalu (promosi, hari libur),
+ prediksi minggu ini kemungkinan juga terpengaruh."</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Struktur penjelasan model time series ke klien</div>
+      <div class="card-desc">
+        <ol style="margin:6px 0 0 18px;padding:0;display:grid;gap:5px">
+          <li><strong>Seberapa akurat</strong> — MAPE / MAE dalam satuan bisnis (rupiah, unit), bukan hanya persentase</li>
+          <li><strong>Seberapa jauh bisa dipercaya</strong> — forecast 7 hari vs 30 hari, mana yang lebih andal</li>
+          <li><strong>Sinyal utama</strong> — pola apa yang paling dominan (mingguan, bulanan, tren naik/turun)</li>
+          <li><strong>Kapan model bisa meleset</strong> — event tak terduga (promosi mendadak, hari libur baru)</li>
+          <li><strong>Rekomendasi penggunaan</strong> — pakai untuk forecast berapa hari ke depan, refresh seberapa sering</li>
+        </ol>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════ VERSIONING -->
@@ -1400,6 +1764,135 @@ git push origin feat/01-eda-cohort-[nama-junior]
 <!-- ═══════════════════════════════════════════════ CHECKLIST / DOD -->
 <div id="page-checklist" class="page">
   <div class="ph"><div class="ph-title">Definition of Done &amp; Checklist</div><div class="ph-desc">Centang semua item yang relevan sebelum share ke senior atau klien. Project belum selesai hanya karena notebook sudah jalan.</div></div>
+
+  <div class="section">
+    <div class="section-title">DoD per tahap analisis</div>
+
+    <!-- EDA -->
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+        <div class="card-title" style="margin:0">DoD — EDA <span style="font-weight:400;color:var(--text2)">(Exploratory Data Analysis)</span></div>
+        <span style="font-size:12px;color:var(--text3)">👉 Tujuan: ngerti data &amp; arah analisis</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--green);margin-bottom:6px">✅ EDA dianggap selesai kalau</div>
+          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:5px">
+            <li><strong style="color:var(--text)">Struktur data sudah jelas</strong> — jumlah data, kolom, tipe data dipahami</li>
+            <li><strong style="color:var(--text)">Data quality issue teridentifikasi</strong> — missing value, outlier, duplicate, inconsistency</li>
+            <li>Sudah ada <strong style="color:var(--text)">3–5 insight</strong> yang relevan ke bisnis</li>
+            <li>Sudah ada <strong style="color:var(--text)">minimal 1 hipotesis</strong></li>
+            <li>Sudah tahu kandidat feature penting &amp; data yang perlu perhatian</li>
+          </ul>
+        </div>
+        <div style="display:grid;gap:10px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:6px">📦 Output minimum</div>
+            <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
+              <li>Summary dataset (singkat)</li>
+              <li>List data issues</li>
+              <li>3–5 insight + interpretasi (bukan cuma grafik)</li>
+              <li>Hipotesis awal</li>
+            </ul>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--red);margin-bottom:6px">❌ Tidak perlu</div>
+            <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
+              <li>Visualisasi semua kolom tanpa tujuan</li>
+              <li>Analisis terlalu dalam tanpa arah</li>
+              <li>Statistik kompleks yang tidak dipakai</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature Engineering -->
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+        <div class="card-title" style="margin:0">DoD — Feature Engineering</div>
+        <span style="font-size:12px;color:var(--text3)">👉 Tujuan: memastikan feature yang dipakai masuk akal &amp; bisa dijelaskan</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--green);margin-bottom:6px">✅ FE dianggap selesai kalau</div>
+          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:5px">
+            <li>Ada <strong style="color:var(--text)">final feature list</strong> yang akan dipakai di model</li>
+            <li>Setiap feature punya <strong style="color:var(--text)">penjelasan singkat</strong> (logic / business reasoning)</li>
+            <li>Feature sudah bebas <strong style="color:var(--text)">data leakage</strong> &amp; tidak error (null / format aman)</li>
+            <li>Sudah buang feature yang jelas tidak relevan atau sangat redundant</li>
+            <li>Ada <strong style="color:var(--text)">jejak eksplorasi ringan</strong> — feature yang dicoba tapi tidak dipakai (singkat)</li>
+          </ul>
+          <div style="margin-top:10px;padding:10px;background:var(--bg);border-radius:var(--r);border:1px solid var(--border)">
+            <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px">🔍 Feature Exploration (Light EDA)</div>
+            <ul style="margin:0 0 0 16px;padding:0;font-size:12px;color:var(--text3);display:grid;gap:3px">
+              <li>Cek distribusi feature baru</li>
+              <li>Cek hubungan sederhana ke target</li>
+              <li>Sanity check — make sense atau tidak</li>
+            </ul>
+          </div>
+        </div>
+        <div style="display:grid;gap:10px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:6px">📦 Output minimum</div>
+            <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
+              <li>Final feature list</li>
+              <li>Deskripsi singkat tiap feature</li>
+              <li>Catatan singkat feature yang tidak dipakai (opsional)</li>
+            </ul>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--red);margin-bottom:6px">❌ Tidak perlu</div>
+            <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
+              <li>Buktiin semua feature improve metric</li>
+              <li>Feature terlalu banyak tanpa alasan</li>
+              <li>Transformasi kompleks tanpa tujuan jelas</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modeling -->
+    <div class="card">
+      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+        <div class="card-title" style="margin:0">DoD — Modeling</div>
+        <span style="font-size:12px;color:var(--text3)">👉 Tujuan: menghasilkan model yang cukup baik &amp; bisa dipakai</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--green);margin-bottom:6px">✅ Modeling dianggap selesai kalau</div>
+          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:5px">
+            <li>Ada <strong style="color:var(--text)">baseline model</strong> (WAJIB)</li>
+            <li>Ada <strong style="color:var(--text)">1–2 improvement</strong> dari baseline</li>
+            <li>Metric yang digunakan sesuai dengan use case bisnis</li>
+            <li>Model sudah dicek overfitting / underfitting (secara basic)</li>
+            <li>Ada <strong style="color:var(--text)">interpretasi hasil model ke bisnis</strong> — bukan cuma angka metric</li>
+          </ul>
+        </div>
+        <div style="display:grid;gap:10px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:6px">📦 Output minimum</div>
+            <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
+              <li>Perbandingan baseline vs final model</li>
+              <li>Metric + penjelasan sederhana</li>
+              <li>Insight dari model (misal: feature penting)</li>
+            </ul>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--red);margin-bottom:6px">❌ Tidak perlu</div>
+            <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
+              <li>Langsung pakai model kompleks</li>
+              <li>Tuning berlebihan tanpa impact jelas</li>
+              <li>Fokus ke metric tanpa konteks bisnis</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title" style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid var(--border)">Checklist keseluruhan — centang sebelum share ke senior / klien</div>
 
   <div class="prog-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div>
   <div class="prog-txt" id="prog-txt">0 / 27 selesai</div>
