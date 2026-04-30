@@ -149,6 +149,14 @@ tr:last-child td { border-bottom:none }
 .tab-btn.active { color:var(--text); border-bottom-color:var(--text) }
 .tab-panel { display:none } .tab-panel.active { display:block }
 
+/* ── os-tabs ─────────────────────────────── */
+.os-tabs { display:flex; gap:4px; margin-bottom:8px }
+.os-btn { padding:2px 10px; font-size:11px; font-weight:500; cursor:pointer;
+  border:1px solid var(--border2); border-radius:3px; background:var(--surface2);
+  color:var(--text2); font-family:var(--sans); transition:all .1s }
+.os-btn.active { background:var(--text); color:#fff; border-color:var(--text) }
+.os-panel { display:none } .os-panel.active { display:block }
+
 /* ── checklist ───────────────────────────── */
 .cl-item { display:flex; align-items:flex-start; gap:12px; padding:10px 0;
            border-bottom:1px solid var(--border) }
@@ -249,7 +257,7 @@ tr:last-child td { border-bottom:none }
       <div class="card-title">Modelling / ML</div>
       <div class="card-desc">Feature engineering, training, evaluasi. Data dari BQ. Hasil dikonsumsi DE untuk pipeline &amp; dashboard.</div>
       <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)">
-        Output: <code>model .pkl</code> <code>CSV → GCS</code> <code>tabel → BQ</code>
+        Output: <code>model .pkl</code> <code>.h5 / .keras</code> <code>.pt / .pth</code> <code>CSV → GCS</code> <code>tabel → BQ</code>
       </div>
     </div>
   </div>
@@ -261,7 +269,7 @@ tr:last-child td { border-bottom:none }
       <button class="tab-btn" onclick="tab('folder','ml',this)">Modelling</button>
     </div>
     <div id="folder-analisis" class="tab-panel active">
-      <div class="code-wrap"><pre>[klien]_[topik]_[tahun]/
+      <div class="code-wrap"><pre>[tahunbulan]_[klien]_[topik]/
 ├── data/raw/              # CSV pendukung (mapping, referensi)
 ├── notebooks/
 │   ├── 01_eda_[topik].ipynb
@@ -276,11 +284,11 @@ tr:last-child td { border-bottom:none }
 └── requirements.txt</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
     </div>
     <div id="folder-ml" class="tab-panel">
-      <div class="code-wrap"><pre>[klien]_[topik]_[tahun]/
+      <div class="code-wrap"><pre>[tahunbulan]_[klien]_[topik]/
 ├── data/raw/
 ├── notebooks/
 │   ├── 01_eda_[topik].ipynb
-│   ├── 02_features.ipynb
+│   ├── 02_ads_feature_engineering.ipynb
 │   └── 03_modelling.ipynb
 ├── src/
 │   ├── __init__.py
@@ -305,9 +313,34 @@ tr:last-child td { border-bottom:none }
     <div class="c-icon">💡</div>
     <div class="c-body">
       <div class="c-label">Tiga aturan yang paling sering dilanggar</div>
-      <div class="c-text">1. Notebook harus bisa <strong>Restart &amp; Run All</strong> — tanpa error, oleh siapapun.<br>
-      2. <strong>Credentials tidak boleh masuk Git</strong> — <code>.env</code> dan <code>.json</code> selalu di <code>.gitignore</code>.<br>
-      3. <strong>Path harus relatif</strong> — tidak ada <code>C:/Users/Budi/Desktop/...</code> di kode.</div>
+      <div class="c-text">
+        <div style="display:grid;gap:10px;margin-top:4px">
+          <div>
+            <strong>1. Notebook harus bisa Restart &amp; Run All</strong> — tanpa error, oleh siapapun.<br>
+            <div style="display:flex;gap:8px;margin-top:4px;font-size:11px">
+              <span style="color:var(--red)">❌ Ada sel yang harus dijalankan manual di tengah, variabel dari run sebelumnya masih di memory</span>
+              <span style="flex-shrink:0">→</span>
+              <span style="color:var(--green)">✅ Kernel → Restart &amp; Run All langsung selesai tanpa error</span>
+            </div>
+          </div>
+          <div>
+            <strong>2. Credentials tidak boleh masuk Git</strong> — <code>.env</code> dan <code>.json</code> selalu di <code>.gitignore</code>.<br>
+            <div style="display:flex;gap:8px;margin-top:4px;font-size:11px">
+              <span style="color:var(--red)">❌ <code>GCP_PROJECT_ID = "nama-project"</code> ditulis langsung di notebook atau <code>.env</code> ikut di-commit</span>
+              <span style="flex-shrink:0">→</span>
+              <span style="color:var(--green)">✅ <code>os.getenv('GCP_PROJECT_ID')</code> + <code>.env</code> ada di <code>.gitignore</code></span>
+            </div>
+          </div>
+          <div>
+            <strong>3. Path harus relatif</strong> — tidak ada <code>C:/Users/Budi/Desktop/...</code> di kode.<br>
+            <div style="display:flex;gap:8px;margin-top:4px;font-size:11px">
+              <span style="color:var(--red)">❌ <code>pd.read_csv("C:/Users/Budi/Desktop/data.csv")</code></span>
+              <span style="flex-shrink:0">→</span>
+              <span style="color:var(--green)">✅ <code>pd.read_csv(PROJECT_ROOT / 'data' / 'raw' / 'data.csv')</code></span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -323,7 +356,7 @@ tr:last-child td { border-bottom:none }
     <div class="section-title">Jalur A — data dari BigQuery</div>
     <ol class="steps">
       <li><div class="step-num">1</div><div class="step-body"><div class="step-title">Brief project bersama</div><div class="step-desc">DE + DS sepakati tujuan, scope, output, dan timeline sebelum mulai apapun.</div></div></li>
-      <li><div class="step-num">2</div><div class="step-body"><div class="step-title">DE buat folder di DGX</div><div class="step-desc">Format: <code>[klien]_[topik]_[tahun]</code>. DE juga buat service account GCP (1 SA per project) dan set IAM yang diperlukan.</div></div></li>
+      <li><div class="step-num">2</div><div class="step-body"><div class="step-title">DE buat folder di DGX</div><div class="step-desc">Format: <code>[tahunbulan]_[klien]_[topik]</code>. DE juga buat service account GCP (1 SA per project) dan set IAM yang diperlukan.</div></div></li>
       <li><div class="step-num">3</div><div class="step-body"><div class="step-title">DE kirim info ke DS</div><div class="step-desc">Path folder di DGX + path file <code>.json</code> service account.</div></div></li>
       <li><div class="step-num">4</div><div class="step-body"><div class="step-title">DS setup folder &amp; <code>.env</code></div><div class="step-desc">Isi path SA, GCP project ID, init Git, install dependencies.</div></div></li>
       <li><div class="step-num">5</div><div class="step-body"><div class="step-title">DS query BQ, EDA, analisis</div><div class="step-desc">Commit setiap tahap selesai. Koordinasi dengan DE jika ada kebutuhan data tambahan.</div></div></li>
@@ -361,20 +394,58 @@ tr:last-child td { border-bottom:none }
   <div id="env-dgx" class="tab-panel active">
     <div class="callout tip"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Buka terminal di DGX</div><div class="c-text">Di Jupyter yang terbuka di browser: klik <strong>New → Terminal</strong> (pojok kanan atas). Terminal ini langsung terhubung ke DGX.</div></div></div>
     <ol class="steps">
-      <li><div class="step-num">1</div><div class="step-body"><div class="step-title">Koordinasi dengan DE</div><div class="step-desc">Minta path folder project di DGX, path file <code>.json</code> service account, dan konfirmasi akses BQ dataset &amp; GCS bucket.<br><div class="code-wrap" style="margin-top:8px"><pre>cd /workspace/tokopedia_churn_2025</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div></div></li>
+      <li><div class="step-num">1</div><div class="step-body"><div class="step-title">Koordinasi dengan DE</div><div class="step-desc">Minta path folder project di DGX, path file <code>.json</code> service account, dan konfirmasi akses BQ dataset &amp; GCS bucket.<br>
+        <div style="margin-top:8px">
+          <div class="os-tabs">
+            <button class="os-btn active" onclick="ostab('cmd1','mac',this)">Mac / Linux</button>
+            <button class="os-btn" onclick="ostab('cmd1','win',this)">Windows</button>
+          </div>
+          <div id="cmd1-mac" class="os-panel active"><div class="code-wrap"><pre>cd /workspace/202501_tokopedia_churn</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+          <div id="cmd1-win" class="os-panel"><div class="code-wrap"><pre>cd C:\workspace\202501_tokopedia_churn</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+        </div>
+      </div></div></li>
       <li><div class="step-num">2</div><div class="step-body"><div class="step-title">Buat struktur folder</div><div class="step-desc">
         <div class="two-col">
-          <div><div class="col-label">Analisis</div><div class="code-wrap"><pre>mkdir -p data/raw outputs/dashboard \
+          <div>
+            <div class="col-label">Analisis</div>
+            <div class="os-tabs">
+              <button class="os-btn active" onclick="ostab('cmd2a','mac',this)">Mac / Linux</button>
+              <button class="os-btn" onclick="ostab('cmd2a','win',this)">Windows</button>
+            </div>
+            <div id="cmd2a-mac" class="os-panel active"><div class="code-wrap"><pre>mkdir -p data/raw outputs/dashboard \
   outputs/reports config notebooks</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
-          <div><div class="col-label">Modelling</div><div class="code-wrap"><pre>mkdir -p data/raw outputs/models \
+            <div id="cmd2a-win" class="os-panel"><div class="code-wrap"><pre>mkdir data\raw, outputs\dashboard, `
+  outputs\reports, config, notebooks</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+          </div>
+          <div>
+            <div class="col-label">Modelling</div>
+            <div class="os-tabs">
+              <button class="os-btn active" onclick="ostab('cmd2b','mac',this)">Mac / Linux</button>
+              <button class="os-btn" onclick="ostab('cmd2b','win',this)">Windows</button>
+            </div>
+            <div id="cmd2b-mac" class="os-panel active"><div class="code-wrap"><pre>mkdir -p data/raw outputs/models \
   outputs/dashboard outputs/reports \
   config src pipeline notebooks
 touch src/__init__.py pipeline/run_pipeline.py</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+            <div id="cmd2b-win" class="os-panel"><div class="code-wrap"><pre>mkdir data\raw, outputs\models, `
+  outputs\dashboard, outputs\reports, `
+  config, src, pipeline, notebooks
+New-Item src\__init__.py, pipeline\run_pipeline.py -ItemType File</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+          </div>
         </div>
       </div></div></li>
-      <li><div class="step-num">3</div><div class="step-body"><div class="step-title">Buat file konfigurasi</div><div class="step-desc"><div class="code-wrap"><pre>touch .gitignore .env.example README.md
+      <li><div class="step-num">3</div><div class="step-body"><div class="step-title">Buat file konfigurasi</div><div class="step-desc">
+        <div class="os-tabs">
+          <button class="os-btn active" onclick="ostab('cmd3','mac',this)">Mac / Linux</button>
+          <button class="os-btn" onclick="ostab('cmd3','win',this)">Windows</button>
+        </div>
+        <div id="cmd3-mac" class="os-panel active"><div class="code-wrap"><pre>touch .gitignore .env.example README.md
 mkdir -p config &amp;&amp; touch config/config.yaml
-cp .env.example .env</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div></div></li>
+cp .env.example .env</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+        <div id="cmd3-win" class="os-panel"><div class="code-wrap"><pre>New-Item .gitignore, .env.example, README.md -ItemType File
+mkdir config -Force; New-Item config\config.yaml -ItemType File
+Copy-Item .env.example .env</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+      </div></div></li>
       <li><div class="step-num">4</div><div class="step-body"><div class="step-title">Simpan credentials ke <code>.env</code></div><div class="step-desc">
         <div class="callout dont" style="margin-bottom:10px"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Jangan</div><div class="c-text">File <code>.json</code> service account jangan di-copy ke folder project. Simpan hanya <em>path-nya</em> di <code>.env</code> — bukan filenya.</div></div></div>
         <div class="code-wrap"><pre>GOOGLE_APPLICATION_CREDENTIALS=/path/dari/de/sa-key.json
@@ -383,12 +454,26 @@ GCS_BUCKET_NAME=nama-bucket-dari-de</pre><button class="copy-btn" onclick="cp(th
       </div></div></li>
       <li><div class="step-num">5</div><div class="step-body"><div class="step-title">Install dependencies</div><div class="step-desc">
         <div class="callout warn" style="margin-bottom:10px"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Jangan pakai sudo di DGX</div><div class="c-text">Pakai <code>pip install --user</code> agar tidak merusak environment orang lain.</div></div></div>
-        <div class="code-wrap"><pre>pip list | grep -E "pandas|numpy|google-cloud"
+        <div class="os-tabs">
+          <button class="os-btn active" onclick="ostab('cmd5','mac',this)">Mac / Linux</button>
+          <button class="os-btn" onclick="ostab('cmd5','win',this)">Windows</button>
+        </div>
+        <div id="cmd5-mac" class="os-panel active"><div class="code-wrap"><pre>pip list | grep -E "pandas|numpy|google-cloud"
 pip install --user google-cloud-bigquery google-cloud-storage \
             db-dtypes python-dotenv pyyaml
-pip freeze &gt; requirements.txt</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+pip freeze &gt; requirements.txt</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+        <div id="cmd5-win" class="os-panel"><div class="code-wrap"><pre>pip list | Select-String "pandas|numpy|google-cloud"
+pip install google-cloud-bigquery google-cloud-storage `
+            db-dtypes python-dotenv pyyaml
+pip freeze &gt; requirements.txt</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
       </div></div></li>
-      <li><div class="step-num">6</div><div class="step-body"><div class="step-title">Init Git &amp; mulai coding</div><div class="step-desc"><div class="code-wrap"><pre>git init &amp;&amp; git add . &amp;&amp; git commit -m "initial commit: struktur project"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <li><div class="step-num">6</div><div class="step-body"><div class="step-title">Init Git &amp; mulai coding</div><div class="step-desc">
+        <div class="os-tabs">
+          <button class="os-btn active" onclick="ostab('cmd6','mac',this)">Mac / Linux</button>
+          <button class="os-btn" onclick="ostab('cmd6','win',this)">Windows</button>
+        </div>
+        <div id="cmd6-mac" class="os-panel active"><div class="code-wrap"><pre>git init &amp;&amp; git add . &amp;&amp; git commit -m "initial commit: struktur project"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+        <div id="cmd6-win" class="os-panel"><div class="code-wrap"><pre>git init; git add .; git commit -m "initial commit: struktur project"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
         <div class="callout do" style="margin-top:10px"><div class="c-icon">✅</div><div class="c-body"><div class="c-label">Siap</div><div class="c-text">Folder rapi, Git aktif, credentials tersimpan. Buat notebook pertama: <code>01_eda_[topik].ipynb</code></div></div></div>
       </div></div></li>
     </ol>
@@ -423,11 +508,11 @@ client = bigquery.Client(project=cfg['gcp']['project_id'])  # langsung jalan</pr
 
   <div class="section">
     <div class="section-title">Nama folder project</div>
-    <div class="card"><div class="card-title">Format: <code>[klien]_[topik]_[tahun]</code></div>
+    <div class="card"><div class="card-title">Format: <code>[tahunbulan]_[klien]_[topik]</code></div>
     <div class="two-col">
-      <div><div class="col-label">✅ Benar</div><pre>tokopedia_churn_2025
-bankbca_fraud_detection_2025
-internal_hr_attrition_2024</pre></div>
+      <div><div class="col-label">✅ Benar</div><pre>202501_tokopedia_churn
+202503_bankbca_fraud_detection
+202411_internal_hr_attrition</pre></div>
       <div><div class="col-label">❌ Hindari</div><pre>project_baru
 analisis tokopedia
 DS_Project_Final</pre></div>
@@ -487,7 +572,10 @@ model_20250315_1430.pkl       # timestamped untuk audit trail</pre><button class
     <div class="code-wrap"><pre>## Tujuan
 - [Pertanyaan bisnis yang mau dijawab]
 - Output: [tabel / grafik / file untuk BQ]
-- Sumber data: [nama tabel BQ / CSV + periode]</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+- Sumber data: [nama tabel BQ / CSV + periode]
+
+**Author:** [Nama DS] | [email@astra.com]
+**Estimasi run:** ~X menit</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
     <div class="card"><div class="card-title">Sel 2 — Setup path</div>
     <div class="code-wrap"><pre>import os, sys
 from pathlib import Path
@@ -637,7 +725,7 @@ client = bigquery.Client(project=os.getenv('GCP_PROJECT_ID'))</pre><button class
   <div class="section">
     <div class="section-title">Setup identity di DGX</div>
     <div class="callout warn"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Jangan pakai --global di DGX</div><div class="c-text">Flag <code>--global</code> mengubah identity untuk semua user di DGX. Selalu pakai tanpa flag (default = lokal untuk repo ini).</div></div></div>
-    <div class="code-wrap"><pre>cd /workspace/tokopedia_churn_2025
+    <div class="code-wrap"><pre>cd /workspace/202501_tokopedia_churn
 git init
 git config user.name "Nama Kamu"
 git config user.email "kamu@perusahaan.com"
@@ -1133,9 +1221,17 @@ except Exception as e:
   <div class="section">
     <div class="section-title">Yang harus diserahkan ke DE</div>
     <div class="card"><div class="card-title">1. run_pipeline.py yang sudah teruji</div>
-    <div class="code-wrap"><pre>cd /workspace/nama-project
+    <div class="os-tabs">
+      <button class="os-btn active" onclick="ostab('cmdh1','mac',this)">Mac / Linux</button>
+      <button class="os-btn" onclick="ostab('cmdh1','win',this)">Windows</button>
+    </div>
+    <div id="cmdh1-mac" class="os-panel active"><div class="code-wrap"><pre>cd /workspace/nama-project
 python pipeline/run_pipeline.py --config config/config.yaml
 # Pastikan: tidak ada error, output file terbuat, log tampil jelas</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+    <div id="cmdh1-win" class="os-panel"><div class="code-wrap"><pre>cd C:\workspace\nama-project
+python pipeline/run_pipeline.py --config config/config.yaml
+# Pastikan: tidak ada error, output file terbuat, log tampil jelas</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+    </div>
     <div class="card"><div class="card-title">2. requirements.txt up-to-date</div>
     <div class="code-wrap"><pre>pip freeze > requirements.txt
 python -c "import pandas; import sklearn; print('OK')"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
@@ -1254,12 +1350,12 @@ git push origin feat/01-eda-cohort-[nama-junior]
   <div class="section">
     <div class="section-title">Standar dasar — wajib semua tipe project</div>
     <div class="cl-item"><input type="checkbox" class="cl-cb" id="c1" onchange="tick()"><label class="cl-text" for="c1"><div class="cl-main">Notebook bisa dijalankan ulang dari awal oleh orang lain</div><div class="cl-hint">Kernel → Restart &amp; Run All. Tidak ada error sampai sel terakhir.</div></label><span class="cl-badge w">Wajib</span></div>
-    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c2" onchange="tick()"><label class="cl-text" for="c2"><div class="cl-main">Sel pertama menjelaskan tujuan notebook</div><div class="cl-hint">Sel Markdown di baris paling atas: tujuan, output, sumber data.</div></label><span class="cl-badge w">Wajib</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c2" onchange="tick()"><label class="cl-text" for="c2"><div class="cl-main">Sel pertama berisi tujuan, author, dan estimasi run</div><div class="cl-hint">Sel Markdown di baris paling atas: tujuan, output, sumber data, nama &amp; email author, estimasi waktu run. Estimasi penting — notebook yang lambat bisa menghambat pipeline.</div></label><span class="cl-badge w">Wajib</span></div>
     <div class="cl-item"><input type="checkbox" class="cl-cb" id="c3" onchange="tick()"><label class="cl-text" for="c3"><div class="cl-main">Tidak ada path absolut di dalam kode</div><div class="cl-hint">Tidak ada <code>C:/Users/NamaKamu/</code>. Pakai <code>PROJECT_ROOT / 'data' / 'raw'</code>.</div></label><span class="cl-badge w">Wajib</span></div>
     <div class="cl-item"><input type="checkbox" class="cl-cb" id="c4" onchange="tick()"><label class="cl-text" for="c4"><div class="cl-main">Setiap fungsi ada docstring</div><div class="cl-hint">Baris pertama dalam fungsi: kalimat singkat dalam tanda kutip tiga.</div></label><span class="cl-badge w">Wajib</span></div>
     <div class="cl-item"><input type="checkbox" class="cl-cb" id="c5" onchange="tick()"><label class="cl-text" for="c5"><div class="cl-main">Tidak ada credentials yang ditulis langsung di kode</div><div class="cl-hint">Tidak ada <code>project_id = "nama-project"</code> atau <code>password = "abc"</code>. Pakai <code>.env</code> dan <code>os.getenv()</code>.</div></label><span class="cl-badge w">Wajib</span></div>
     <div class="cl-item"><input type="checkbox" class="cl-cb" id="c6" onchange="tick()"><label class="cl-text" for="c6"><div class="cl-main">Semua variabel punya nama yang bermakna</div><div class="cl-hint">Tidak ada <code>df</code>, <code>df2</code>, <code>temp</code>, <code>x</code>. Ganti dengan nama deskriptif seperti <code>df_transaksi_clean</code>.</div></label><span class="cl-badge w">Wajib</span></div>
-    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c7" onchange="tick()"><label class="cl-text" for="c7"><div class="cl-main">Nama folder project: <code>[klien]_[topik]_[tahun]</code></div><div class="cl-hint">Contoh benar: <code>tokopedia_churn_2025</code>. Hindari spasi, huruf kapital, dan nama generik.</div></label><span class="cl-badge w">Wajib</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c7" onchange="tick()"><label class="cl-text" for="c7"><div class="cl-main">Nama folder project: <code>[tahunbulan]_[klien]_[topik]</code></div><div class="cl-hint">Contoh benar: <code>202501_tokopedia_churn</code>. Format tahunbulan (YYYYMM) di depan agar mudah di-sort. Hindari spasi, huruf kapital, dan nama generik.</div></label><span class="cl-badge w">Wajib</span></div>
     <div class="cl-item"><input type="checkbox" class="cl-cb" id="c8" onchange="tick()"><label class="cl-text" for="c8"><div class="cl-main">Ada README.md yang menjelaskan project</div><div class="cl-hint">Minimal: tujuan project, sumber data, cara menjalankan notebook.</div></label><span class="cl-badge w">Wajib</span></div>
     <div class="cl-item"><input type="checkbox" class="cl-cb" id="c9" onchange="tick()"><label class="cl-text" for="c9"><div class="cl-main">File <code>.env</code> dan <code>.json</code> tidak masuk ke Git</div><div class="cl-hint">Cek <code>git status</code> — tidak ada <code>.env</code> atau <code>.json</code> di staged files. Sudah ada di <code>.gitignore</code>.</div></label><span class="cl-badge w">Wajib</span></div>
   </div>
@@ -1279,7 +1375,7 @@ git push origin feat/01-eda-cohort-[nama-junior]
     <div class="cl-item"><input type="checkbox" class="cl-cb" id="c16" onchange="tick()"><label class="cl-text" for="c16"><div class="cl-main">Metrik evaluasi memenuhi target yang disepakati di brief</div><div class="cl-hint">Bandingkan dengan target eksplisit dari brief — bukan hanya "angkanya terasa bagus".</div></label><span class="cl-badge b">Modelling</span></div>
     <div class="cl-item"><input type="checkbox" class="cl-cb" id="c17" onchange="tick()"><label class="cl-text" for="c17"><div class="cl-main">Perbandingan dengan baseline sudah dilakukan</div><div class="cl-hint">Minimal DummyRegressor / DummyClassifier. Improvement &lt; 5% = diskusikan dulu dengan senior sebelum dikirim.</div></label><span class="cl-badge b">Modelling</span></div>
     <div class="cl-item"><input type="checkbox" class="cl-cb" id="c18" onchange="tick()"><label class="cl-text" for="c18"><div class="cl-main">Gap train–test &lt; 0.1 (tidak ada overfitting signifikan)</div><div class="cl-hint">Jika gap besar, dokumentasikan kenapa dan sudah didiskusikan dengan senior sebelum lanjut.</div></label><span class="cl-badge b">Modelling</span></div>
-    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c19" onchange="tick()"><label class="cl-text" for="c19"><div class="cl-main"><code>model_latest.pkl</code> + <code>feature_cols.json</code> ada di <code>outputs/models/</code></div><div class="cl-hint">Dua file ini wajib hadir bersamaan — model tanpa feature list tidak bisa dipakai ulang dengan benar.</div></label><span class="cl-badge b">Modelling</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c19" onchange="tick()"><label class="cl-text" for="c19"><div class="cl-main">File model + <code>feature_cols.json</code> ada di <code>outputs/models/</code></div><div class="cl-hint">Format model disesuaikan tipe: <code>model_latest.pkl</code> (scikit-learn/XGBoost), <code>model_latest.h5</code> atau folder <code>saved_model/</code> (Keras/TF), <code>model_latest.pt</code> (PyTorch). Dua file wajib hadir bersamaan — model tanpa feature list tidak bisa dipakai ulang dengan benar.</div></label><span class="cl-badge b">Modelling</span></div>
     <div class="cl-item"><input type="checkbox" class="cl-cb" id="c20" onchange="tick()"><label class="cl-text" for="c20"><div class="cl-main"><code>run_pipeline.py</code> bisa dijalankan end-to-end tanpa error</div><div class="cl-hint">Test: <code>python pipeline/run_pipeline.py --config config/config.yaml</code>. Output file terbuat, log tampil jelas.</div></label><span class="cl-badge b">Modelling</span></div>
     <div class="cl-item"><input type="checkbox" class="cl-cb" id="c21" onchange="tick()"><label class="cl-text" for="c21"><div class="cl-main"><code>handoff_notes.md</code> sudah ditulis</div><div class="cl-hint">Berisi: frekuensi run, tabel input/output BQ atau GCS, yang perlu dimonitor, dan kontak DS penanggung jawab.</div></label><span class="cl-badge b">Modelling</span></div>
     <div class="cl-item"><input type="checkbox" class="cl-cb" id="c22" onchange="tick()"><label class="cl-text" for="c22"><div class="cl-main">DE sudah konfirmasi bisa menjalankan pipeline</div><div class="cl-hint">DE test di environment mereka sendiri — bukan hanya "sudah dikasih filenya".</div></label><span class="cl-badge b">Modelling</span></div>
@@ -1316,6 +1412,14 @@ function nav(id, el) {
 function tab(group, id, el) {
   document.querySelectorAll('[id^="' + group + '-"]').forEach(p => p.classList.remove('active'));
   el.closest('.tabs').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(group + '-' + id).classList.add('active');
+  el.classList.add('active');
+}
+
+// os tabs (Mac/Linux vs Windows)
+function ostab(group, id, el) {
+  document.querySelectorAll('[id^="' + group + '-"]').forEach(p => p.classList.remove('active'));
+  el.closest('.os-tabs').querySelectorAll('.os-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(group + '-' + id).classList.add('active');
   el.classList.add('active');
 }
