@@ -1657,17 +1657,100 @@ print(lb)
 
 <!-- ═══════════════════════════════════════════════ VERSIONING -->
 <div id="page-versioning" class="page">
-  <div class="ph"><div class="ph-title">Versioning Data &amp; Output</div><div class="ph-desc">Tanpa versioning, tidak ada cara untuk tahu kapan hasil berubah dan kenapa.</div></div>
+  <div class="ph"><div class="ph-title">Versioning Notebook &amp; Output</div><div class="ph-desc">Aturan kapan buat file baru, kapan update yang lama, dan kapan masuk archive.</div></div>
+
+  <div class="section">
+    <div class="section-title">Versioning notebook — pakai Git, bukan nama file</div>
+    <div class="callout dont">
+      <div class="c-icon">❌</div>
+      <div class="c-body">
+        <div class="c-label">Jangan versioning pakai nama file</div>
+        <div class="c-text">
+          <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:6px 10px;align-items:start;font-size:12px;margin-top:4px">
+            <span>01_eda_churn_v1.ipynb<br>01_eda_churn_v2.ipynb<br>01_eda_churn_v2_FINAL.ipynb<br>01_eda_churn_v2_FINAL_fix.ipynb</span>
+            <span style="padding-top:4px">→</span>
+            <span style="color:var(--green)">✅ Satu file: <code>01_eda_churn_[topik].ipynb</code><br>Histori perubahan ada di Git — bisa dilihat kapanpun.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="code-wrap"><pre># Lihat histori perubahan satu notebook di Git
+git log --oneline notebooks/01_eda_churn_[topik].ipynb
+
+# Lihat isi notebook di commit tertentu (ganti abc1234 dengan commit hash)
+git show abc1234:notebooks/01_eda_churn_[topik].ipynb | python -m json.tool | grep source -A5
+
+# Kembalikan notebook ke versi sebelumnya (hati-hati — ini overwrite file aktif)
+git checkout abc1234 -- notebooks/01_eda_churn_[topik].ipynb</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Kapan buat file notebook baru vs update yang lama?</div>
+    <table>
+      <tr><th>Situasi</th><th>Yang dilakukan</th><th>Contoh</th></tr>
+      <tr>
+        <td>Revisi, perbaikan, tambah analisis di scope yang sama</td>
+        <td><strong>Update file yang ada</strong>, commit di Git</td>
+        <td>Tambah 2 grafik di EDA yang sudah ada</td>
+      </tr>
+      <tr>
+        <td>Arah analisis berubah tapi masih satu tahap</td>
+        <td><strong>Update file yang ada</strong>, commit dengan pesan yang jelas</td>
+        <td>EDA diganti fokus dari revenue ke retention</td>
+      </tr>
+      <tr>
+        <td>Tahap baru yang berbeda topiknya</td>
+        <td><strong>Buat file baru</strong> dengan nomor urut baru</td>
+        <td><code>02_eda_segmentasi_[topik].ipynb</code> setelah EDA pertama selesai</td>
+      </tr>
+      <tr>
+        <td>Eksperimen sementara — mau coba sesuatu tapi belum jelas arahnya</td>
+        <td><strong>Buat di branch Git</strong>, merge kalau jadi, hapus kalau tidak</td>
+        <td>Coba pendekatan clustering baru sebelum commit ke main</td>
+      </tr>
+      <tr>
+        <td>Tidak pakai Git sama sekali</td>
+        <td>Lihat bagian di bawah →</td>
+        <td>—</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Kalau tidak pakai Git — konvensi nama &amp; archive</div>
+    <div class="callout warn"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Ini fallback, bukan standar utama — pakai Git kalau bisa</div><div class="c-text">Tanpa Git, histori perubahan tidak bisa dilihat secara detail. Konvensi nama di bawah hanya untuk menghindari kebingungan siapa edit apa kapan.</div></div></div>
+    <div class="card">
+      <div class="card-title">Format nama saat bekerja tanpa Git</div>
+      <div class="code-wrap" style="margin-top:8px"><pre># Format: [nomor]_[tahap]_[topik]_v[versi]_[nama]_YYYYMMDD.ipynb
+01_eda_churn_v1_budi_20250315.ipynb
+01_eda_churn_v2_budi_20250322.ipynb   # setelah revisi besar
+
+# Setelah senior approve → simpan versi final tanpa nama/tanggal
+01_eda_churn_[topik].ipynb            # ini yang jadi "official"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+    <div class="card" style="margin-top:10px">
+      <div class="card-title">Kapan file lama masuk <code>notebooks/archive/</code>?</div>
+      <ul style="margin:8px 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:6px">
+        <li>Versi sudah <strong>digantikan versi baru yang sudah di-approve</strong> — pindahkan yang lama ke <code>archive/</code>, jangan dihapus</li>
+        <li>Notebook dari <strong>eksplorasi yang tidak dilanjutkan</strong> — masuk <code>archive/</code> dengan nama aslinya</li>
+        <li>Notebook dari <strong>project selesai</strong> yang kemungkinan jadi referensi — masuk <code>archive/</code></li>
+        <li><strong>Jangan</strong> masukkan ke archive notebook yang masih aktif dipakai — biar tidak bingung mana yang terbaru</li>
+      </ul>
+    </div>
+    <div class="code-wrap" style="margin-top:10px"><pre>notebooks/
+├── 01_eda_churn_[topik].ipynb        ← versi aktif / final
+├── 02_feature_engineering_[topik].ipynb
+├── 03_modelling_[topik].ipynb
+└── archive/
+    ├── 01_eda_churn_v1_budi_20250315.ipynb   ← versi lama, disimpan sebagai referensi
+    └── 01_eda_explore_cohort_20250310.ipynb  ← eksplorasi yang tidak dilanjutkan</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
 
   <div class="section">
     <div class="section-title">Konvensi nama file output</div>
-    <div class="code-wrap"><pre># Format: [nama]_YYYYMMDD.ext  atau  [nama]_YYYYMMDD_HHMM.ext
-#   YYYYMMDD = tanggal (tahun-bulan-hari)
-#   HHMM     = jam dan menit dalam format 24 jam (contoh: 1430 = pukul 14:30)
-
-# Output per-run — pakai tanggal; tambahkan jam jika bisa jalan >1x sehari
+    <div class="code-wrap"><pre># Output per-run — pakai tanggal; tambahkan jam jika bisa jalan >1x sehari
 predictions_20250315.csv           # cukup tanggal jika hanya sekali sehari
-model_20250315_1430.pkl            # _1430 = pukul 14:30 WIB
+model_20250315_1430.pkl            # _1430 = pukul 14:30
 
 # Output final ke klien — pakai versi semantik
 report_churn_v1.pdf
@@ -1676,74 +1759,55 @@ report_churn_v2_revised.pdf</pre><button class="copy-btn" onclick="cp(this)">Cop
 
   <div class="section">
     <div class="section-title">Simpan model — selalu dua versi</div>
-    <div class="code-wrap"><pre># Format run_id: YYYYMMDD_HHMM (tanggal + jam-menit 24 jam)
-# Contoh: '20250315_1430' = 15 Maret 2025, pukul 14:30 WIB
-run_id = datetime.now().strftime('%Y%m%d_%H%M')
+    <div class="code-wrap"><pre>run_id = datetime.now().strftime('%Y%m%d_%H%M')
 
-# latest = selalu di-overwrite, dipakai pipeline/inference
-joblib.dump(model, MODEL_PATH / 'model_latest.pkl')
+joblib.dump(model, MODEL_PATH / 'model_latest.pkl')          # selalu di-overwrite, dipakai pipeline
+joblib.dump(model, MODEL_PATH / f'model_{run_id}.pkl')       # audit trail, jangan dihapus
 
-# timestamped = tidak pernah dihapus, untuk audit & rollback
-joblib.dump(model, MODEL_PATH / f'model_{run_id}.pkl')
-
-# Wajib: simpan feature list bersama model
 with open(MODEL_PATH / 'feature_cols.json', 'w') as f:
     json.dump(feature_cols, f)</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
-    <div class="callout warn"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Jangan hapus model lama</div><div class="c-text">Pindahkan ke subfolder <code>archive/</code> jika tidak aktif. File lama adalah bukti audit dan bahan rollback.</div></div></div>
+    <div class="callout warn"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Jangan hapus model lama — pindahkan ke archive/</div><div class="c-text">File lama adalah bukti audit dan bahan rollback kalau model baru bermasalah di production.</div></div></div>
   </div>
 
   <div class="section">
     <div class="section-title">Metadata tiap run — meta_[run_id].json</div>
-    <div class="card-desc" style="font-size:13px;color:var(--text2);margin-bottom:12px">Catatan kondisi saat model dijalankan. Berguna untuk audit dan debug: <em>"kenapa prediksi bulan ini berbeda dari bulan lalu?"</em> — jawaban biasanya ada di file ini.</div>
-    <div class="code-wrap"><pre>import json
-from datetime import datetime
-
-def save_model_metadata(run_id: str, params: dict, metrics: dict,
-                        feature_cols: list, model_path, cfg: dict) -> None:
-    """Simpan metadata run ke JSON — dipanggil setelah setiap training."""
+    <div class="card-desc" style="font-size:13px;color:var(--text2);margin-bottom:12px">Menjawab pertanyaan: <em>"kenapa prediksi bulan ini berbeda dari bulan lalu?"</em> — jawaban biasanya ada di sini.</div>
+    <div class="code-wrap"><pre>def save_model_metadata(run_id, params, metrics, feature_cols, model_path, cfg):
+    """Simpan metadata run ke JSON setelah setiap training."""
     meta = {
-        'run_id'       : run_id,                      # '20250315_1430'
-        'trained_at'   : datetime.now().isoformat(),  # timestamp lengkap ISO
+        'run_id'       : run_id,
+        'trained_at'   : datetime.now().isoformat(),
         'n_features'   : len(feature_cols),
         'feature_cols' : feature_cols,
-        'model_params' : params,                      # hyperparameter yang dipakai
-        'metrics'      : metrics,                     # MAE, AUC, dll.
-        'train_period' : {
-            'start': str(cfg['data']['date_start']),
-            'end'  : str(cfg['data']['date_end']),
-        },
+        'model_params' : params,
+        'metrics'      : metrics,
+        'train_period' : {'start': cfg['data']['date_start'], 'end': cfg['data']['date_end']},
     }
-    out = model_path / f'meta_{run_id}.json'
-    with open(out, 'w') as f:
-        json.dump(meta, f, indent=2, ensure_ascii=False)
-    print(f"✓ Metadata tersimpan: {out.name}")
-
-# Contoh isi meta_20250315_1430.json yang dihasilkan:
-# {
-#   "run_id": "20250315_1430",
-#   "trained_at": "2025-03-15T14:30:05.123456",
-#   "n_features": 45,
-#   "feature_cols": ["tenure_days", "avg_order_value", ...],
-#   "model_params": {"n_estimators": 300, "learning_rate": 0.05},
-#   "metrics": {"MAE": 45231, "AUC": 0.84},
-#   "train_period": {"start": "2024-01-01", "end": "2024-12-31"}
-# }</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    with open(model_path / f'meta_{run_id}.json', 'w') as f:
+        json.dump(meta, f, indent=2, ensure_ascii=False)</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
   </div>
 
   <div class="section">
-    <div class="section-title">Struktur outputs/</div>
-    <div class="code-wrap"><pre>outputs/
+    <div class="section-title">Struktur folder lengkap</div>
+    <div class="code-wrap"><pre>notebooks/
+├── 01_eda_[topik].ipynb               ← aktif
+├── 02_feature_engineering_[topik].ipynb
+├── 03_modelling_[topik].ipynb
+└── archive/                           ← versi lama & eksplorasi tidak dilanjutkan
+
+outputs/
 ├── models/
-│   ├── model_latest.pkl         ← selalu diperbarui
-│   ├── model_20250315_1430.pkl  ← audit trail
-│   ├── feature_cols.json        ← wajib ada
-│   └── meta_20250315_1430.json  ← metadata tiap run
+│   ├── model_latest.pkl               ← selalu diperbarui
+│   ├── model_20250315_1430.pkl        ← audit trail
+│   ├── feature_cols.json              ← wajib ada bersama model
+│   ├── meta_20250315_1430.json        ← metadata tiap run
+│   └── archive/
 ├── dashboard/
-│   ├── data_for_dashboard.csv   ← file aktif untuk BI
+│   ├── data_for_dashboard.csv         ← file aktif untuk BI
 │   └── archive/
 └── reports/
-    ├── model_metrics_history.csv ← akumulasi semua run
-    └── quality_check_20250315.json</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    ├── model_metrics_history.csv      ← akumulasi semua run
+    └── archive/</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
   </div>
 </div>
 
