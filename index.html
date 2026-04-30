@@ -1020,6 +1020,130 @@ __pycache__/
 venv/
 *.pyc</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
   </div>
+
+  <div class="section">
+    <div class="section-title">Git via VSCode — Source Control panel</div>
+    <div class="callout warn">
+      <div class="c-icon">⚠️</div>
+      <div class="c-body">
+        <div class="c-label">Kalau VSCode tersambung ke DGX via SSH — identity di DGX yang dipakai, bukan laptop</div>
+        <div class="c-text">VSCode Remote SSH hanya sebagai tampilan. Semua operasi Git — termasuk commit — dijalankan di DGX. Kalau identity belum di-set di repo tersebut, commit bisa masuk dengan nama atau email orang lain yang terakhir kerja di DGX. <strong>Wajib cek identity dulu via terminal sebelum commit pertama.</strong></div>
+      </div>
+    </div>
+    <div class="code-wrap"><pre># Buka terminal di VSCode (Ctrl+` atau Terminal → New Terminal)
+# Pastikan kamu sudah ada di folder project yang benar
+cd /workspace/202501_tokopedia_churn
+
+# Cek identity yang aktif sekarang
+git config user.name
+git config user.email
+
+# Kalau kosong atau nama orang lain → set dulu
+git config user.name  "Nama Kamu"
+git config user.email "kamu@perusahaan.com"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    <div class="card" style="margin-top:10px">
+      <div class="card-title">Cara pakai Source Control panel (tanpa terminal)</div>
+      <ol style="margin:8px 0 0 18px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:6px">
+        <li>Buka panel Source Control: <strong>Ctrl+Shift+G</strong> atau klik ikon cabang di sidebar kiri</li>
+        <li>File yang berubah muncul di daftar — klik <strong>+</strong> di sebelah file untuk stage</li>
+        <li>Ketik pesan commit di kolom <strong>Message</strong> di bagian atas panel</li>
+        <li>Tekan <strong>Ctrl+Enter</strong> atau klik tombol <strong>✓ Commit</strong></li>
+        <li>Push: klik <strong>⋯ → Push</strong>, atau klik tombol sync (↑↓) di status bar bawah</li>
+      </ol>
+    </div>
+    <div class="callout tip" style="margin-top:10px"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Stage hanya file yang relevan</div><div class="c-text">Jangan klik "Stage All" sembarangan — cek dulu tiap file. File data besar atau <code>.env</code> bisa tidak sengaja masuk kalau <code>.gitignore</code> belum lengkap.</div></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Git di Vertex AI Jupyter</div>
+    <div class="callout warn">
+      <div class="c-icon">⚠️</div>
+      <div class="c-body">
+        <div class="c-label">Notebook autosave — tapi tidak auto-commit</div>
+        <div class="c-text">Vertex AI Workbench menyimpan notebook otomatis ke disk, tapi tidak pernah commit ke Git. Kalau instance-nya di-restart atau dihapus sebelum commit, perubahan bisa hilang. <strong>Commit secara rutin dari terminal Jupyter.</strong></div>
+      </div>
+    </div>
+    <div class="code-wrap"><pre># Buka terminal di Jupyter: File → New → Terminal
+
+# Setup identity — harus diulang setiap kali instance baru di Workbench managed
+git config user.name  "Nama Kamu"
+git config user.email "kamu@perusahaan.com"
+
+# Alur commit seperti biasa
+git status
+git add notebooks/01_eda_[topik].ipynb
+git commit -m "add: EDA selesai — insight churn pelanggan lama"
+git push origin feat/eda-[topik]</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    <div class="card" style="margin-top:10px">
+      <div class="card-title">Catatan khusus Vertex AI</div>
+      <ul style="margin:8px 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:6px">
+        <li><strong>Workbench managed</strong> — instance bisa di-stop/restart oleh sistem. Identity Git tidak persisten, harus di-set ulang setiap sesi baru.</li>
+        <li><strong>Workbench user-managed</strong> — identity lebih persisten, tapi tetap cek dengan <code>git config user.name</code> sebelum commit pertama.</li>
+        <li>Kalau repo di-clone dari GitHub / Cloud Source Repositories, pastikan credentials (SSH key atau token) sudah terset sebelum push.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Kerja di branch — tutup VSCode — lanjut besok — merge ke main</div>
+    <div class="callout tip"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Branch tidak hilang kalau VSCode ditutup — asal sudah di-push ke remote</div><div class="c-text">Branch tersimpan di Git, bukan di window VSCode. Yang hilang hanya tampilan. Selama sudah <code>git push</code>, kamu bisa kembali ke branch yang sama kapanpun dari komputer manapun.</div></div></div>
+
+    <div class="card">
+      <div class="card-title">Alur lengkap: mulai → tutup → lanjut → selesai</div>
+      <div class="code-wrap" style="margin-top:8px"><pre>## ── HARI INI: mulai branch baru ──────────────────────────────
+git checkout main
+git pull origin main                          # pastikan main terbaru
+
+git checkout -b feat/eda-churn-[namamu]       # buat branch baru
+
+# ... kerja, kerja, kerja ...
+
+git add notebooks/01_eda_churn_[topik].ipynb
+git commit -m "add: EDA selesai, 5 insight ditemukan"
+git push -u origin feat/eda-churn-[namamu]   # -u hanya perlu sekali, untuk link ke remote
+
+# VSCode bisa ditutup sekarang ✓
+
+
+## ── BESOK: lanjut dari branch yang sama ──────────────────────
+git fetch origin                              # cek perubahan terbaru di remote
+git checkout feat/eda-churn-[namamu]         # kembali ke branch kamu
+
+# ... lanjut kerja ...
+
+git add .
+git commit -m "update: tambah analisis outlier"
+git push                                      # sudah ter-link, tidak perlu -u lagi
+
+
+## ── SELESAI: merge ke main ────────────────────────────────────
+git checkout main
+git pull origin main                          # pastikan main masih terbaru
+
+git merge feat/eda-churn-[namamu]            # merge branch kamu ke main
+git push origin main
+
+git branch -d feat/eda-churn-[namamu]        # hapus branch lokal yang sudah selesai</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <div class="card" style="margin-top:10px">
+      <div class="card-title">Lupa sedang di branch mana? Atau lupa nama branch-nya?</div>
+      <div class="code-wrap" style="margin-top:8px"><pre>git branch               # lihat semua branch lokal — yang aktif ada tanda *
+git branch -a            # termasuk branch yang ada di remote
+git log --oneline -5     # lihat 5 commit terakhir di branch ini
+
+# Visual — lihat semua branch sekaligus
+git log --oneline --all --graph</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <div class="callout dont" style="margin-top:10px">
+      <div class="c-icon">❌</div>
+      <div class="c-body">
+        <div class="c-label">Jangan kerja langsung di main</div>
+        <div class="c-text">Kalau langsung push ke <code>main</code> dan ada konflik dengan pekerjaan orang lain di DGX — sangat susah di-undo. Selalu buat branch sendiri, merge ke main setelah selesai dan sudah dicek.</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════ DATA QUALITY -->
