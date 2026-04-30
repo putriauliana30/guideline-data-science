@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics Standard Guideline</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:#F7F6F2; --surface:#FFF; --surface2:#F0EFE9;
+  --border:#E2E0D8; --border2:#CCCAB8;
+  --text:#1A1916; --text2:#5C5A52; --text3:#9A9890;
+  --green:#1A5C3A; --green-bg:#D8F3DC; --green-bd:#A8D5B5;
+  --red:#8B2119;   --red-bg:#FAE0DE;   --red-bd:#E8A8A3;
+  --blue:#163E6E;  --blue-bg:#DDEAF8;  --blue-bd:#A3C3E8;
+  --amber:#6B5200; --amber-bg:#FEF5D8; --amber-bd:#E8D080;
+  --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',sans-serif;
+  --r:6px; --rl:10px;
+}
+*, *::before, *::after { box-sizing: border-box; margin:0; padding:0 }
+html { background: var(--bg) }
+body { font-family: var(--sans); color: var(--text); font-size:14px; line-height:1.65 }
+
+/* ── layout ─────────────────────────────── */
+.shell { display:flex; min-height:100vh }
+.sidebar {
+  width:224px; flex-shrink:0; position:sticky; top:0; height:100vh;
+  background:var(--surface); border-right:1px solid var(--border);
+  display:flex; flex-direction:column; overflow-y:auto;
+}
+.sidebar-logo { padding:20px 18px 14px; border-bottom:1px solid var(--border) }
+.logo-mark { font-family:var(--mono); font-size:13px; font-weight:500;
+             display:flex; align-items:center; gap:8px }
+.logo-dot { width:8px; height:8px; background:var(--text); border-radius:50%; flex-shrink:0 }
+.logo-sub { font-size:11px; color:var(--text3); margin-top:3px; font-weight:300 }
+.nav-group { padding:12px 0 4px }
+.nav-label {
+  font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--text3); padding:0 18px; margin-bottom:4px; display:block;
+}
+.nav-item {
+  display:flex; align-items:center; gap:10px; padding:7px 18px; cursor:pointer;
+  font-size:13px; color:var(--text2); border-left:2px solid transparent;
+  text-decoration:none; transition:background .1s, color .1s;
+}
+.nav-item:hover { background:var(--bg); color:var(--text) }
+.nav-item.active { color:var(--text); border-left-color:var(--text); background:var(--bg); font-weight:500 }
+.nav-ico { font-size:12px; width:16px; text-align:center; flex-shrink:0; opacity:.65 }
+.sidebar-footer { margin-top:auto; padding:14px 18px; border-top:1px solid var(--border);
+                  font-size:11px; color:var(--text3); font-family:var(--mono) }
+.main { flex:1; padding:40px 52px; max-width:860px }
+.page { display:none } .page.active { display:block }
+
+/* ── page header ─────────────────────────── */
+.ph { margin-bottom:32px; padding-bottom:20px; border-bottom:1px solid var(--border) }
+.ph-title { font-size:22px; font-weight:600; margin-bottom:6px; letter-spacing:-.025em }
+.ph-desc { font-size:14px; color:var(--text2) }
+
+/* ── sections ───────────────────────────── */
+.section { margin-bottom:32px }
+.section-title {
+  font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--text3); margin-bottom:14px; padding-bottom:6px;
+  border-bottom:1px solid var(--border);
+}
+.card {
+  border:1px solid var(--border); border-radius:var(--rl); padding:16px 18px;
+  margin-bottom:10px; background:var(--surface);
+}
+.card-title { font-size:13px; font-weight:500; margin-bottom:6px }
+.card-desc { font-size:13px; color:var(--text2); line-height:1.65 }
+
+/* ── callouts ───────────────────────────── */
+.callout {
+  border-radius:var(--rl); padding:14px 16px; margin-bottom:12px;
+  display:flex; gap:12px; align-items:flex-start;
+}
+.callout .c-icon { font-size:15px; flex-shrink:0; margin-top:1px }
+.callout .c-body { flex:1 }
+.callout .c-label { font-size:10px; font-weight:700; letter-spacing:.07em;
+                    text-transform:uppercase; margin-bottom:4px }
+.callout .c-text { font-size:13px; line-height:1.6 }
+.callout.do   { background:var(--green-bg); border:1px solid var(--green-bd) }
+.callout.do   .c-label { color:var(--green) }
+.callout.dont { background:var(--red-bg);   border:1px solid var(--red-bd) }
+.callout.dont .c-label { color:var(--red) }
+.callout.tip  { background:var(--blue-bg);  border:1px solid var(--blue-bd) }
+.callout.tip  .c-label { color:var(--blue) }
+.callout.warn { background:var(--amber-bg); border:1px solid var(--amber-bd) }
+.callout.warn .c-label { color:var(--amber) }
+
+/* ── code blocks ────────────────────────── */
+.code-wrap { position:relative; margin:10px 0 }
+pre, code {
+  font-family:var(--mono); font-size:12px; line-height:1.75;
+  background:var(--surface2); border:1px solid var(--border); border-radius:var(--r);
+  color:var(--text);
+}
+pre { padding:14px 16px; white-space:pre; overflow-x:auto; display:block }
+code { padding:1px 5px; display:inline; vertical-align:baseline }
+.copy-btn {
+  position:absolute; top:8px; right:8px; font-size:11px; font-weight:500;
+  padding:3px 10px; border:1px solid var(--border2); border-radius:4px;
+  cursor:pointer; background:var(--surface); color:var(--text2);
+  font-family:var(--sans); transition:all .1s;
+}
+.copy-btn:hover { background:var(--bg); color:var(--text) }
+
+/* ── two-col ─────────────────────────────── */
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px }
+.col-label { font-size:11px; font-weight:600; letter-spacing:.05em;
+             text-transform:uppercase; color:var(--text3); margin-bottom:5px }
+
+/* ── steps ──────────────────────────────── */
+.steps { list-style:none; padding:0; counter-reset:step }
+.steps li {
+  counter-increment:step; display:flex; gap:14px; padding:12px 0;
+  border-bottom:1px solid var(--border);
+}
+.steps li:last-child { border-bottom:none }
+.step-num {
+  width:24px; height:24px; border-radius:50%; background:var(--text);
+  color:#fff; font-size:11px; font-weight:600; display:flex;
+  align-items:center; justify-content:center; flex-shrink:0; margin-top:1px;
+  font-family:var(--mono);
+}
+.step-body { flex:1 }
+.step-title { font-size:13px; font-weight:500; margin-bottom:4px }
+.step-desc { font-size:13px; color:var(--text2) }
+
+/* ── table ───────────────────────────────── */
+table { width:100%; border-collapse:collapse; font-size:13px; margin:10px 0 }
+th { text-align:left; padding:8px 12px; border-bottom:2px solid var(--border);
+     color:var(--text2); font-weight:600; font-size:11px; letter-spacing:.05em;
+     text-transform:uppercase }
+td { padding:8px 12px; border-bottom:1px solid var(--border); color:var(--text2) }
+tr:last-child td { border-bottom:none }
+
+/* ── tabs ────────────────────────────────── */
+.tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:16px }
+.tab-btn {
+  padding:8px 16px; font-size:12px; font-weight:500; cursor:pointer;
+  color:var(--text3); border-bottom:2px solid transparent; margin-bottom:-1px;
+  background:none; border-top:none; border-left:none; border-right:none;
+  font-family:var(--sans); transition:all .1s;
+}
+.tab-btn:hover { color:var(--text2) }
+.tab-btn.active { color:var(--text); border-bottom-color:var(--text) }
+.tab-panel { display:none } .tab-panel.active { display:block }
+
+/* ── os-tabs ─────────────────────────────── */
+.os-tabs { display:flex; gap:4px; margin-bottom:8px }
+.os-btn { padding:2px 10px; font-size:11px; font-weight:500; cursor:pointer;
+  border:1px solid var(--border2); border-radius:3px; background:var(--surface2);
+  color:var(--text2); font-family:var(--sans); transition:all .1s }
+.os-btn.active { background:var(--text); color:#fff; border-color:var(--text) }
+.os-panel { display:none } .os-panel.active { display:block }
+
+/* ── checklist ───────────────────────────── */
+.cl-item { display:flex; align-items:flex-start; gap:12px; padding:10px 0;
+           border-bottom:1px solid var(--border) }
+.cl-item:last-child { border-bottom:none }
+.cl-cb { margin-top:2px; width:14px; height:14px; cursor:pointer;
+          flex-shrink:0; accent-color:var(--text) }
+.cl-text { flex:1; font-size:13px }
+.cl-main { margin-bottom:3px; line-height:1.4 }
+.cl-hint { font-size:12px; color:var(--text3); line-height:1.55 }
+.cl-text.done .cl-main { color:var(--text3); text-decoration:line-through }
+.cl-badge { font-size:10px; font-weight:600; letter-spacing:.05em; text-transform:uppercase;
+            padding:2px 7px; border-radius:3px; flex-shrink:0; margin-top:3px }
+.cl-badge.w { background:var(--red-bg); color:var(--red) }
+.cl-badge.s { background:var(--green-bg); color:var(--green) }
+.cl-badge.b { background:var(--blue-bg); color:var(--blue) }
+.cl-badge.a { background:var(--amber-bg); color:var(--amber) }
+.prog-bar { height:3px; background:var(--border); border-radius:2px; margin-bottom:8px }
+.prog-fill { height:100%; background:var(--text); border-radius:2px; transition:width .3s }
+.prog-txt { font-size:12px; color:var(--text3); font-family:var(--mono); margin-bottom:20px }
+
+/* ── dod ─────────────────────────────────── */
+.dod-list { list-style:none; padding:0 }
+.dod-list li { padding:7px 0; border-bottom:1px solid var(--border);
+               font-size:13px; color:var(--text2); display:flex; gap:8px }
+.dod-list li:last-child { border-bottom:none }
+.dod-list li::before { content:'☐'; font-size:13px; flex-shrink:0; color:var(--text3) }
+
+/* ── scrollbar ───────────────────────────── */
+::-webkit-scrollbar { width:5px; height:5px }
+::-webkit-scrollbar-track { background:transparent }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark"><div class="logo-dot"></div>DS Playbook</div>
+    <div class="logo-sub">Panduan coding tim data science</div>
+  </div>
+  <div class="nav-group">
+    <span class="nav-label">Project</span>
+    <a class="nav-item active" onclick="nav('home',this)"><span class="nav-ico">◈</span>Tipe project</a>
+    <a class="nav-item" onclick="nav('flow',this)"><span class="nav-ico">⇄</span>Alur DE &amp; DS</a>
+    <a class="nav-item" onclick="nav('setup',this)"><span class="nav-ico">▶</span>Cara mulai project</a>
+  </div>
+  <div class="nav-group">
+    <span class="nav-label">Panduan</span>
+    <a class="nav-item" onclick="nav('naming',this)"><span class="nav-ico">Aa</span>Penamaan</a>
+    <a class="nav-item" onclick="nav('notebook',this)"><span class="nav-ico">⊞</span>Notebook</a>
+    <a class="nav-item" onclick="nav('python',this)"><span class="nav-ico">{}</span>Python / .py</a>
+    <a class="nav-item" onclick="nav('config',this)"><span class="nav-ico">⚙</span>Config &amp; secret</a>
+    <a class="nav-item" onclick="nav('git',this)"><span class="nav-ico">⑂</span>Git dasar</a>
+  </div>
+  <div class="nav-group">
+    <span class="nav-label">Playbook</span>
+    <a class="nav-item" onclick="nav('dq',this)"><span class="nav-ico">◉</span>Data Quality</a>
+    <a class="nav-item" onclick="nav('eval',this)"><span class="nav-ico">≋</span>Model Evaluation</a>
+    <a class="nav-item" onclick="nav('versioning',this)"><span class="nav-ico">◷</span>Versioning</a>
+    <a class="nav-item" onclick="nav('testing',this)"><span class="nav-ico">⊘</span>Testing</a>
+    <a class="nav-item" onclick="nav('experiment',this)"><span class="nav-ico">⊛</span>Experiment Tracking</a>
+    <a class="nav-item" onclick="nav('insight',this)"><span class="nav-ico">◎</span>Insight &amp; Rekomendasi</a>
+    <a class="nav-item" onclick="nav('maturity',this)"><span class="nav-ico">▲</span>Pipeline Maturity</a>
+    <a class="nav-item" onclick="nav('errlog',this)"><span class="nav-ico">⊡</span>Error &amp; Logging</a>
+    <a class="nav-item" onclick="nav('handoff',this)"><span class="nav-ico">→</span>Handoff ke DE</a>
+    <a class="nav-item" onclick="nav('dashboard',this)"><span class="nav-ico">▣</span>Dashboard Readiness</a>
+    <a class="nav-item" onclick="nav('collab',this)"><span class="nav-ico">⊕</span>Kolaborasi Tim</a>
+  </div>
+  <div class="nav-group">
+    <span class="nav-label">Submit</span>
+    <a class="nav-item" onclick="nav('checklist',this)"><span class="nav-ico">✓</span>DoD &amp; Checklist</a>
+  </div>
+  <div class="sidebar-footer">v2.0 · Tim DS Konsultan</div>
+</nav>
+
+<main class="main">
+
+<!-- ═══════════════════════════════════════════════ HOME -->
+<div id="page-home" class="page active">
+  <div class="ph">
+    <div class="ph-title">Tipe project</div>
+    <div class="ph-desc">Dua tipe project — pilih yang sesuai untuk dapat struktur folder dan template yang tepat.</div>
+  </div>
+
+  <div class="two-col" style="margin-bottom:24px">
+    <div class="card">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--green);margin-bottom:10px">Analisis</div>
+      <div class="card-title">Analisis &amp; Reporting</div>
+      <div class="card-desc">EDA, cohort, segmentasi, reporting. Tidak ada training model. Data bisa dari BQ atau CSV/XLSX lokal.</div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)">
+        Output: <code>CSV → GCS</code> <code>tabel → BQ</code> <code>Excel / deck</code>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--blue);margin-bottom:10px">Modelling</div>
+      <div class="card-title">Modelling / ML</div>
+      <div class="card-desc">Feature engineering, training, evaluasi. Data dari BQ. Hasil dikonsumsi DE untuk pipeline &amp; dashboard.</div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)">
+        Output: <code>model .pkl</code> <code>.h5 / .keras</code> <code>.pt / .pth</code> <code>CSV → GCS</code> <code>tabel → BQ</code>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Struktur folder standar</div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="tab('folder','analisis',this)">Analisis</button>
+      <button class="tab-btn" onclick="tab('folder','ml',this)">Modelling</button>
+    </div>
+    <div id="folder-analisis" class="tab-panel active">
+      <div class="code-wrap"><pre>[tahunbulan]_[klien]_[topik]/
+├── data/raw/              # CSV pendukung (mapping, referensi)
+├── notebooks/
+│   ├── 01_eda_[topik].ipynb
+│   └── 02_export_dashboard.ipynb
+├── outputs/
+│   ├── dashboard/         # CSV → GCS / BQ
+│   └── reports/           # grafik, PDF
+├── config/config.yaml
+├── .env.example
+├── .gitignore
+├── README.md
+└── requirements.txt</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+    <div id="folder-ml" class="tab-panel">
+      <div class="code-wrap"><pre>[tahunbulan]_[klien]_[topik]/
+├── data/raw/
+├── notebooks/
+│   ├── 01_eda_[topik].ipynb
+│   ├── 02_ads_feature_engineering.ipynb
+│   └── 03_modelling.ipynb
+├── src/
+│   ├── __init__.py
+│   ├── ingestion.py
+│   ├── features.py
+│   ├── model.py
+│   └── export.py
+├── pipeline/run_pipeline.py
+├── outputs/
+│   ├── models/
+│   ├── dashboard/
+│   └── reports/
+├── config/config.yaml
+├── .env.example
+├── .gitignore
+├── README.md
+└── requirements.txt</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+  </div>
+
+  <div class="callout tip">
+    <div class="c-icon">💡</div>
+    <div class="c-body">
+      <div class="c-label">Tiga aturan yang paling sering dilanggar</div>
+      <div class="c-text">
+        <div style="display:grid;gap:10px;margin-top:4px">
+          <div>
+            <strong>1. Notebook harus bisa Restart &amp; Run All</strong> — tanpa error, oleh siapapun.<br>
+            <div style="display:flex;gap:8px;margin-top:4px;font-size:11px">
+              <span style="color:var(--red)">❌ Ada sel yang harus dijalankan manual di tengah, variabel dari run sebelumnya masih di memory</span>
+              <span style="flex-shrink:0">→</span>
+              <span style="color:var(--green)">✅ Kernel → Restart &amp; Run All langsung selesai tanpa error</span>
+            </div>
+          </div>
+          <div>
+            <strong>2. Credentials tidak boleh masuk Git</strong> — <code>.env</code> dan <code>.json</code> selalu di <code>.gitignore</code>.<br>
+            <div style="display:flex;gap:8px;margin-top:4px;font-size:11px">
+              <span style="color:var(--red)">❌ <code>GCP_PROJECT_ID = "nama-project"</code> ditulis langsung di notebook atau <code>.env</code> ikut di-commit</span>
+              <span style="flex-shrink:0">→</span>
+              <span style="color:var(--green)">✅ <code>os.getenv('GCP_PROJECT_ID')</code> + <code>.env</code> ada di <code>.gitignore</code></span>
+            </div>
+          </div>
+          <div>
+            <strong>3. Path harus relatif</strong> — tidak ada <code>C:/Users/Budi/Desktop/...</code> di kode.<br>
+            <div style="display:flex;gap:8px;margin-top:4px;font-size:11px">
+              <span style="color:var(--red)">❌ <code>pd.read_csv("C:/Users/Budi/Desktop/data.csv")</code></span>
+              <span style="flex-shrink:0">→</span>
+              <span style="color:var(--green)">✅ <code>pd.read_csv(PROJECT_ROOT / 'data' / 'raw' / 'data.csv')</code></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ FLOW -->
+<div id="page-flow" class="page">
+  <div class="ph">
+    <div class="ph-title">Alur kerja: DE &amp; DS</div>
+    <div class="ph-desc">Dua jalur berbeda tergantung sumber datanya.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Jalur A — data dari BigQuery</div>
+    <ol class="steps">
+      <li><div class="step-num">1</div><div class="step-body"><div class="step-title">Brief project bersama</div><div class="step-desc">DE + DS sepakati tujuan, scope, output, dan timeline sebelum mulai apapun.</div></div></li>
+      <li><div class="step-num">2</div><div class="step-body"><div class="step-title">DE buat folder di DGX</div><div class="step-desc">Format: <code>[tahunbulan]_[klien]_[topik]</code>. DE juga buat service account GCP (1 SA per project) dan set IAM yang diperlukan.</div></div></li>
+      <li><div class="step-num">3</div><div class="step-body"><div class="step-title">DE kirim info ke DS</div><div class="step-desc">Path folder di DGX + path file <code>.json</code> service account.</div></div></li>
+      <li><div class="step-num">4</div><div class="step-body"><div class="step-title">DS setup folder &amp; <code>.env</code></div><div class="step-desc">Isi path SA, GCP project ID, init Git, install dependencies.</div></div></li>
+      <li><div class="step-num">5</div><div class="step-body"><div class="step-title">DS query BQ, EDA, analisis</div><div class="step-desc">Commit setiap tahap selesai. Koordinasi dengan DE jika ada kebutuhan data tambahan.</div></div></li>
+      <li><div class="step-num">6</div><div class="step-body"><div class="step-title">DS export ke GCS / BQ</div><div class="step-desc">CSV ke GCS, tabel ke BQ. Notifikasi DE bahwa hasil sudah siap.</div></div></li>
+      <li><div class="step-num">7</div><div class="step-body"><div class="step-title">DE setup scheduling &amp; pipeline</div><div class="step-desc">DE consume dari BQ/GCS, otomasi via cron atau Cloud Scheduler.</div></div></li>
+    </ol>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Jalur B — data CSV / XLSX lokal</div>
+    <div class="callout tip"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">DE tidak terlibat di jalur ini</div><div class="c-text">DS mengerjakan sendiri dari awal sampai akhir. Tidak ada setup GCP, tidak ada service account.</div></div></div>
+    <ol class="steps">
+      <li><div class="step-num">1</div><div class="step-body"><div class="step-title">Brief bersama</div><div class="step-desc">Tetap perlu alignment tujuan dan scope, meski DE tidak terlibat di pekerjaan teknis.</div></div></li>
+      <li><div class="step-num">2</div><div class="step-body"><div class="step-title">DS buat dan setup folder project sendiri</div><div class="step-desc">DS membuat folder project dengan struktur standar dan init Git — tidak perlu menunggu DE.</div></div></li>
+      <li><div class="step-num">3</div><div class="step-body"><div class="step-title">Taruh file di <code>data/raw/</code></div><div class="step-desc">CSV / XLSX dari klien masuk ke sini — jangan di root folder.</div></div></li>
+      <li><div class="step-num">4</div><div class="step-body"><div class="step-title">Load, EDA, analisis</div><div class="step-desc">Notebook <code>01_eda</code>, <code>02_analisis</code>, dst.</div></div></li>
+      <li><div class="step-num">5</div><div class="step-body"><div class="step-title">Deliver ke klien</div><div class="step-desc">CSV / Excel / deck / PDF sesuai kebutuhan.</div></div></li>
+    </ol>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ SETUP -->
+<div id="page-setup" class="page">
+  <div class="ph">
+    <div class="ph-title">Cara mulai project baru</div>
+    <div class="ph-desc">Pilih environment yang kamu pakai.</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="tab('env','dgx',this)">🖥 DGX</button>
+    <button class="tab-btn" onclick="tab('env','vscode',this)">💻 VSCode + DGX</button>
+    <button class="tab-btn" onclick="tab('env','vertex',this)">☁️ Vertex AI</button>
+  </div>
+
+  <div id="env-dgx" class="tab-panel active">
+    <div class="callout tip"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Buka terminal di DGX</div><div class="c-text">Di Jupyter yang terbuka di browser: klik <strong>New → Terminal</strong> (pojok kanan atas). Terminal ini langsung terhubung ke DGX.</div></div></div>
+    <ol class="steps">
+      <li><div class="step-num">1</div><div class="step-body"><div class="step-title">Koordinasi dengan DE</div><div class="step-desc">Minta path folder project di DGX, path file <code>.json</code> service account, dan konfirmasi akses BQ dataset &amp; GCS bucket.<br>
+        <div style="margin-top:8px">
+          <div class="os-tabs">
+            <button class="os-btn active" onclick="ostab('cmd1','mac',this)">Mac / Linux</button>
+            <button class="os-btn" onclick="ostab('cmd1','win',this)">Windows</button>
+          </div>
+          <div id="cmd1-mac" class="os-panel active"><div class="code-wrap"><pre>cd /workspace/202501_tokopedia_churn</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+          <div id="cmd1-win" class="os-panel"><div class="code-wrap"><pre>cd C:\workspace\202501_tokopedia_churn</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+        </div>
+      </div></div></li>
+      <li><div class="step-num">2</div><div class="step-body"><div class="step-title">Buat struktur folder</div><div class="step-desc">
+        <div class="two-col">
+          <div>
+            <div class="col-label">Analisis</div>
+            <div class="os-tabs">
+              <button class="os-btn active" onclick="ostab('cmd2a','mac',this)">Mac / Linux</button>
+              <button class="os-btn" onclick="ostab('cmd2a','win',this)">Windows</button>
+            </div>
+            <div id="cmd2a-mac" class="os-panel active"><div class="code-wrap"><pre>mkdir -p data/raw outputs/dashboard \
+  outputs/reports config notebooks</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+            <div id="cmd2a-win" class="os-panel"><div class="code-wrap"><pre>mkdir data\raw, outputs\dashboard, `
+  outputs\reports, config, notebooks</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+          </div>
+          <div>
+            <div class="col-label">Modelling</div>
+            <div class="os-tabs">
+              <button class="os-btn active" onclick="ostab('cmd2b','mac',this)">Mac / Linux</button>
+              <button class="os-btn" onclick="ostab('cmd2b','win',this)">Windows</button>
+            </div>
+            <div id="cmd2b-mac" class="os-panel active"><div class="code-wrap"><pre>mkdir -p data/raw outputs/models \
+  outputs/dashboard outputs/reports \
+  config src pipeline notebooks
+touch src/__init__.py pipeline/run_pipeline.py</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+            <div id="cmd2b-win" class="os-panel"><div class="code-wrap"><pre>mkdir data\raw, outputs\models, `
+  outputs\dashboard, outputs\reports, `
+  config, src, pipeline, notebooks
+New-Item src\__init__.py, pipeline\run_pipeline.py -ItemType File</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+          </div>
+        </div>
+      </div></div></li>
+      <li><div class="step-num">3</div><div class="step-body"><div class="step-title">Buat file konfigurasi</div><div class="step-desc">
+        <div class="os-tabs">
+          <button class="os-btn active" onclick="ostab('cmd3','mac',this)">Mac / Linux</button>
+          <button class="os-btn" onclick="ostab('cmd3','win',this)">Windows</button>
+        </div>
+        <div id="cmd3-mac" class="os-panel active"><div class="code-wrap"><pre>touch .gitignore .env.example README.md
+mkdir -p config &amp;&amp; touch config/config.yaml
+cp .env.example .env</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+        <div id="cmd3-win" class="os-panel"><div class="code-wrap"><pre>New-Item .gitignore, .env.example, README.md -ItemType File
+mkdir config -Force; New-Item config\config.yaml -ItemType File
+Copy-Item .env.example .env</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+      </div></div></li>
+      <li><div class="step-num">4</div><div class="step-body"><div class="step-title">Simpan credentials ke <code>.env</code></div><div class="step-desc">
+        <div class="callout dont" style="margin-bottom:10px"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Jangan</div><div class="c-text">File <code>.json</code> service account jangan di-copy ke folder project. Simpan hanya <em>path-nya</em> di <code>.env</code> — bukan filenya.</div></div></div>
+        <div class="code-wrap"><pre>GOOGLE_APPLICATION_CREDENTIALS=/path/dari/de/sa-key.json
+GCP_PROJECT_ID=nama-gcp-project-dari-de
+GCS_BUCKET_NAME=nama-bucket-dari-de</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      </div></div></li>
+      <li><div class="step-num">5</div><div class="step-body"><div class="step-title">Install dependencies</div><div class="step-desc">
+        <div class="callout warn" style="margin-bottom:10px"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Jangan pakai sudo di DGX</div><div class="c-text">Pakai <code>pip install --user</code> agar tidak merusak environment orang lain.</div></div></div>
+        <div class="os-tabs">
+          <button class="os-btn active" onclick="ostab('cmd5','mac',this)">Mac / Linux</button>
+          <button class="os-btn" onclick="ostab('cmd5','win',this)">Windows</button>
+        </div>
+        <div id="cmd5-mac" class="os-panel active"><div class="code-wrap"><pre>pip list | grep -E "pandas|numpy|google-cloud"
+pip install --user google-cloud-bigquery google-cloud-storage \
+            db-dtypes python-dotenv pyyaml
+pip freeze &gt; requirements.txt</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+        <div id="cmd5-win" class="os-panel"><div class="code-wrap"><pre>pip list | Select-String "pandas|numpy|google-cloud"
+pip install google-cloud-bigquery google-cloud-storage `
+            db-dtypes python-dotenv pyyaml
+pip freeze &gt; requirements.txt</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+      </div></div></li>
+      <li><div class="step-num">6</div><div class="step-body"><div class="step-title">Init Git &amp; mulai coding</div><div class="step-desc">
+        <div class="os-tabs">
+          <button class="os-btn active" onclick="ostab('cmd6','mac',this)">Mac / Linux</button>
+          <button class="os-btn" onclick="ostab('cmd6','win',this)">Windows</button>
+        </div>
+        <div id="cmd6-mac" class="os-panel active"><div class="code-wrap"><pre>git init &amp;&amp; git add . &amp;&amp; git commit -m "initial commit: struktur project"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+        <div id="cmd6-win" class="os-panel"><div class="code-wrap"><pre>git init; git add .; git commit -m "initial commit: struktur project"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+        <div class="callout do" style="margin-top:10px"><div class="c-icon">✅</div><div class="c-body"><div class="c-label">Siap</div><div class="c-text">Folder rapi, Git aktif, credentials tersimpan. Buat notebook pertama: <code>01_eda_[topik].ipynb</code></div></div></div>
+      </div></div></li>
+    </ol>
+  </div>
+
+  <div id="env-vscode" class="tab-panel">
+    <div class="callout tip"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Pastikan VSCode sudah terhubung ke DGX</div><div class="c-text">Cek pojok kiri bawah — harus ada tulisan hijau <code>SSH: dgx-hostname</code>. Kalau belum: <strong>Ctrl+Shift+P → Remote-SSH: Connect to Host</strong></div></div></div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Langkah 1–6 sama dengan DGX, dengan perbedaan:</p>
+    <div class="card"><div class="card-title">Edit file langsung dari Explorer VSCode</div><div class="card-desc">Tidak perlu nano/vim. Buka file <code>.env</code>, <code>config.yaml</code>, dll dari panel Explorer kiri.</div></div>
+    <div class="card"><div class="card-title">Pilih kernel yang tepat</div><div class="card-desc">Saat buka <code>.ipynb</code> di VSCode, klik <strong>Select Kernel</strong> pojok kanan atas → pilih Python environment di DGX, <strong>bukan Python laptop lokal</strong>.</div></div>
+    <div class="card"><div class="card-title">Git GUI bawaan VSCode</div><div class="card-desc">Commit lewat panel Source Control (ikon cabang di sidebar kiri) — tidak perlu terminal untuk commit rutin.</div></div>
+  </div>
+
+  <div id="env-vertex" class="tab-panel">
+    <div class="callout do"><div class="c-icon">✅</div><div class="c-body"><div class="c-label">Yang berbeda di Vertex AI Workbench</div><div class="c-text"><strong>Credentials GCP sudah otomatis tersedia</strong> — tidak perlu <code>.env</code> atau service account.<br><strong>google-cloud libraries sudah pre-installed</strong> — tidak perlu install ulang.<br><strong>Tidak perlu venv</strong> — gunakan kernel yang sudah disediakan.</div></div></div>
+    <div class="card"><div class="card-title">Load config tanpa dotenv</div>
+    <div class="code-wrap"><pre>import yaml
+from google.cloud import bigquery
+
+# Tidak perlu load_dotenv() — credentials sudah aktif otomatis
+with open(PROJECT_ROOT / 'config' / 'config.yaml') as f:
+    cfg = yaml.safe_load(f)
+
+client = bigquery.Client(project=cfg['gcp']['project_id'])  # langsung jalan</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+    <div class="callout warn"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Data di Workbench tidak permanen</div><div class="c-text">File bisa hilang kalau instance di-delete. Push ke Git remote secara rutin dan simpan output ke GCS/BQ.</div></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ NAMING -->
+<div id="page-naming" class="page">
+  <div class="ph"><div class="ph-title">Penamaan</div><div class="ph-desc">Konsisten di seluruh project — folder, file, variabel, dan kolom.</div></div>
+
+  <div class="section">
+    <div class="section-title">Nama folder project</div>
+    <div class="card"><div class="card-title">Format: <code>[tahunbulan]_[klien]_[topik]</code></div>
+    <div class="two-col">
+      <div><div class="col-label">✅ Benar</div><pre>202501_tokopedia_churn
+202503_bankbca_fraud_detection
+202411_internal_hr_attrition</pre></div>
+      <div><div class="col-label">❌ Hindari</div><pre>project_baru
+analisis tokopedia
+DS_Project_Final</pre></div>
+    </div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Nama notebook</div>
+    <div class="card"><div class="card-title">Format: <code>[nn]_[tahap]_[deskripsi].ipynb</code></div>
+    <div class="two-col">
+      <div><div class="col-label">✅ Benar</div><pre>01_eda_customer_base.ipynb
+02_cohort_analysis.ipynb
+03_modelling_churn.ipynb
+04_export_dashboard.ipynb</pre></div>
+      <div><div class="col-label">❌ Hindari</div><pre>analisis.ipynb
+notebook1.ipynb
+FINAL_v2.ipynb
+coba-coba.ipynb</pre></div>
+    </div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Variabel &amp; fungsi Python</div>
+    <div class="card"><div class="card-title">Selalu <code>snake_case</code></div>
+    <div class="two-col">
+      <div><div class="col-label">✅ Benar</div><pre>df_sales
+total_revenue
+load_from_bq()
+build_features()</pre></div>
+      <div><div class="col-label">❌ Hindari</div><pre>dfSales
+totalRevenue
+LoadFromBQ()
+df / df2 / temp_df</pre></div>
+    </div></div>
+    <div class="card"><div class="card-title">Konstanta — <code>UPPER_SNAKE_CASE</code></div>
+    <div class="code-wrap"><pre>BQ_PROJECT_ID = "nama-project-gcp"
+BQ_DATASET    = "ds_results"
+GCS_BUCKET    = "nama-bucket"
+THRESHOLD_MIN = 100_000</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+    <div class="card"><div class="card-title">Kolom DataFrame — normalisasi di awal</div>
+    <div class="code-wrap"><pre>df.columns = df.columns.str.lower().str.strip().str.replace(' ', '_')
+# hasil: ['customer_id', 'order_date', 'total_amount']</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+    <div class="card"><div class="card-title">File output — deskriptif + tanggal atau versi</div>
+    <div class="code-wrap"><pre>predictions_20250315.csv
+model_latest.pkl              # selalu di-overwrite, dipakai inference
+model_20250315_1430.pkl       # timestamped untuk audit trail</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ NOTEBOOK -->
+<div id="page-notebook" class="page">
+  <div class="ph"><div class="ph-title">Standar notebook</div><div class="ph-desc">Setiap notebook harus bisa dijalankan ulang dari awal tanpa error oleh orang lain.</div></div>
+
+  <div class="section">
+    <div class="section-title">Sel wajib di awal</div>
+    <div class="card"><div class="card-title">Sel 1 — Tujuan (Markdown)</div>
+    <div class="code-wrap"><pre>## Tujuan
+- [Pertanyaan bisnis yang mau dijawab]
+- Output: [tabel / grafik / file untuk BQ]
+- Sumber data: [nama tabel BQ / CSV + periode]
+
+**Author:** [Nama DS] | [email@astra.com]
+**Estimasi run:** ~X menit</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+    <div class="card"><div class="card-title">Sel 2 — Setup path</div>
+    <div class="code-wrap"><pre>import os, sys
+from pathlib import Path
+_cwd = Path.cwd()
+PROJECT_ROOT = _cwd if (_cwd/'data').exists() else _cwd.parent
+os.chdir(PROJECT_ROOT)
+sys.path.insert(0, str(PROJECT_ROOT))
+print("Root:", PROJECT_ROOT)</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+    <div class="card"><div class="card-title">Sel 3 — Import &amp; konstanta</div>
+    <div class="code-wrap"><pre># === Jalur BQ (hapus jika pakai CSV) ===
+from google.cloud import bigquery
+from dotenv import load_dotenv
+load_dotenv()
+BQ_PROJECT = os.getenv('GCP_PROJECT_ID')
+GCS_BUCKET = os.getenv('GCS_BUCKET_NAME')
+
+# === Selalu ada ===
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import yaml
+%matplotlib inline
+
+with open(PROJECT_ROOT / 'config' / 'config.yaml') as f:
+    cfg = yaml.safe_load(f)</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Aturan penting</div>
+    <div class="callout do"><div class="c-icon">✅</div><div class="c-body"><div class="c-label">Lakukan — Restart &amp; Run All sebelum share</div><div class="c-text"><strong>Kernel → Restart &amp; Run All</strong>. Pastikan tidak ada error sampai sel terakhir. Ini aturan yang paling sering dilanggar.</div></div></div>
+    <div class="callout do"><div class="c-icon">✅</div><div class="c-body"><div class="c-label">Lakukan — heading Markdown tiap bagian</div><div class="c-text">Gunakan <code>## 1. Load Data</code>, <code>## 2. EDA</code>, dst. agar orang lain bisa navigasi tanpa baca semua sel.</div></div></div>
+    <div class="callout dont"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Hindari — magic number tanpa komentar</div><div class="c-text"><pre>df[df['val'] > 2.5]                        # ← 2.5 apa?
+df[df['val'] > 2.5]  # threshold navigasi sungai ← OK</pre></div></div></div>
+    <div class="callout dont"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Hindari — path absolut</div><div class="c-text"><pre>pd.read_csv("C:/Users/Budi/Desktop/data.csv")       # ← salah
+pd.read_csv(PROJECT_ROOT / 'data' / 'raw' / 'ref.csv')  # benar</pre></div></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ PYTHON -->
+<div id="page-python" class="page">
+  <div class="ph"><div class="ph-title">Standar Python / file .py</div><div class="ph-desc">Berlaku untuk file <code>.py</code> di folder <code>src/</code> dan <code>pipeline/</code>. Notebook boleh lebih longgar.</div></div>
+
+  <div class="section">
+    <div class="section-title">Struktur file</div>
+    <div class="card"><div class="card-title">Satu file <code>.py</code> = satu tanggung jawab</div>
+    <div class="code-wrap"><pre>src/
+  ingestion.py  → query BQ, load CSV, validasi schema
+  features.py   → feature engineering
+  model.py      → training, evaluasi, simpan model
+  export.py     → upload ke GCS dan BQ
+
+pipeline/
+  run_pipeline.py  → orchestrator, dipanggil DE untuk scheduling</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Docstring &amp; type hints</div>
+    <div class="callout do"><div class="c-icon">✅</div><div class="c-body"><div class="c-label">Wajib — docstring untuk setiap fungsi</div></div></div>
+    <div class="card">
+    <div class="code-wrap"><pre>def load_from_bq(query: str, project_id: str) -> pd.DataFrame:
+    """Jalankan query BigQuery dan kembalikan hasilnya sebagai DataFrame."""
+    client = bigquery.Client(project=project_id)
+    return client.query(query).to_dataframe()
+
+def upload_to_bq(df: pd.DataFrame, table_id: str,
+                 project_id: str, write_mode: str = 'WRITE_TRUNCATE') -> None:
+    """
+    Upload DataFrame ke tabel BigQuery.
+
+    Args:
+        df: DataFrame yang mau di-upload
+        table_id: format 'dataset.nama_tabel'
+        write_mode: 'WRITE_TRUNCATE' (replace) atau 'WRITE_APPEND' (tambah)
+    """
+    ...</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Logging</div>
+    <div class="callout do"><div class="c-icon">✅</div><div class="c-body"><div class="c-label">Gunakan logging, bukan print()</div><div class="c-text">Di file <code>.py</code>, selalu pakai <code>logger</code>. Di notebook, <code>print()</code> masih boleh.</div></div></div>
+    <div class="code-wrap"><pre>import logging
+logger = logging.getLogger(__name__)
+logger.info(f"Query selesai: {df.shape[0]:,} baris dari BQ")
+logger.warning(f"Missing value tinggi di kolom 'region': {pct:.1f}%")
+logger.error(f"Upload ke BQ gagal: {str(e)}")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ CONFIG -->
+<div id="page-config" class="page">
+  <div class="ph"><div class="ph-title">Config &amp; kredensial</div><div class="ph-desc">Aturan paling kritis — satu pelanggaran bisa jadi insiden keamanan di klien.</div></div>
+
+  <div class="section">
+    <div class="section-title">Parameter project → config.yaml</div>
+    <div class="callout dont"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Jangan hardcode di kode</div></div></div>
+    <div class="card">
+    <div class="two-col">
+      <div><div class="col-label">❌ Salah</div><pre>project_id = "my-gcp-project"
+dataset    = "analytics"
+threshold  = 2.5</pre></div>
+      <div><div class="col-label">✅ Benar</div><pre>cfg['gcp']['project_id']
+cfg['gcp']['dataset']
+cfg['thresholds']['min_val']</pre></div>
+    </div></div>
+    <div class="card"><div class="card-title">Template config/config.yaml</div>
+    <div class="code-wrap"><pre>gcp:
+  project_id: "nama-gcp-project"
+  dataset: "nama_dataset"
+  bucket: "nama-bucket"
+
+data:
+  date_start: "2024-01-01"
+  date_end: "2024-12-31"
+
+quality:
+  min_rows: 1000
+  max_missing_pct: 20
+
+thresholds:
+  min_val: 0
+  max_val: 1000000</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Kredensial GCP → .env</div>
+    <div class="callout dont"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Tidak pernah boleh — service account .json di dalam repo</div><div class="c-text">File <code>.json</code> service account GCP tidak boleh masuk repo. Simpan di luar folder project, referensikan lewat environment variable.</div></div></div>
+    <div class="card"><div class="card-title">Cara yang benar</div>
+    <div class="code-wrap"><pre># .env ← JANGAN commit! Masukkan ke .gitignore
+GOOGLE_APPLICATION_CREDENTIALS=/path/ke/sa-key.json
+GCP_PROJECT_ID=nama-project-gcp
+GCS_BUCKET_NAME=nama-bucket
+
+# Di Python:
+from dotenv import load_dotenv; import os
+load_dotenv()
+client = bigquery.Client(project=os.getenv('GCP_PROJECT_ID'))</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+    <div class="callout tip"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Alternatif lebih aman — Application Default Credentials</div><div class="c-text"><pre>gcloud auth application-default login
+# Setelah ini, tidak perlu set credentials manual di Python</pre></div></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ GIT -->
+<div id="page-git" class="page">
+  <div class="ph"><div class="ph-title">Git dasar</div><div class="ph-desc">Di DGX, semua user pakai satu akun sistem — Git bisa tabrakan kalau tidak hati-hati.</div></div>
+
+  <div class="section">
+    <div class="section-title">Setup identity di DGX</div>
+    <div class="callout warn"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Jangan pakai --global di DGX</div><div class="c-text">Flag <code>--global</code> mengubah identity untuk semua user di DGX. Selalu pakai tanpa flag (default = lokal untuk repo ini).</div></div></div>
+    <div class="code-wrap"><pre>cd /workspace/202501_tokopedia_churn
+git init
+git config user.name "Nama Kamu"
+git config user.email "kamu@perusahaan.com"
+git config --local --list | grep user  # verifikasi</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Commit message yang bermakna</div>
+    <div class="card">
+    <div class="two-col">
+      <div><div class="col-label">✅ Benar</div><pre>add: EDA notebook cohort bulanan
+fix: handling missing value tanggal
+update: query BQ tambah filter region
+remove: kolom tidak terpakai</pre></div>
+      <div><div class="col-label">❌ Hindari</div><pre>update
+fix bug
+wip
+aaa</pre></div>
+    </div></div>
+    <div class="callout tip"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Commit per milestone, bukan per hari</div><div class="c-text">Commit setiap kali satu tahap selesai: EDA beres, cleaning beres, model pertama jalan. Jangan tunggu project selesai baru commit.</div></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">.gitignore wajib untuk DS + GCP</div>
+    <div class="code-wrap"><pre>.env
+*.json          # service account key GCP!
+*.pkl
+*.csv
+data/raw/
+data/processed/
+__pycache__/
+.ipynb_checkpoints/
+venv/
+*.pyc</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ DATA QUALITY -->
+<div id="page-dq" class="page">
+  <div class="ph"><div class="ph-title">Data Quality &amp; Validasi</div><div class="ph-desc">Validasi berbeda tergantung tipe data. Tentukan tipe datamu dulu.</div></div>
+
+  <div class="section">
+    <div class="section-title">Kenali tipe datamu</div>
+    <table>
+      <tr><th>Tipe</th><th>Definisi</th><th>Key unik</th><th>Contoh</th></tr>
+      <tr><td><strong>Cross-sectional</strong></td><td>Satu titik waktu, banyak entitas</td><td><code>user_id</code></td><td>Survey pelanggan, snapshot profil</td></tr>
+      <tr><td><strong>Time series</strong></td><td>Satu entitas, berulang sepanjang waktu</td><td><code>tanggal</code></td><td>Penjualan harian, water level</td></tr>
+      <tr><td><strong>Panel data</strong></td><td>Banyak entitas × banyak waktu</td><td><code>(user_id, bulan)</code></td><td>Transaksi per user per bulan</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Cek wajib — berlaku semua tipe</div>
+    <div class="code-wrap"><pre>def run_quality_check(df: pd.DataFrame, cfg: dict) -> dict:
+    """Jalankan cek quality dasar, kembalikan ringkasan."""
+    results = {
+        'row_count'      : len(df),
+        'duplicate_rows' : int(df.duplicated().sum()),
+        'missing_pct'    : (df.isnull().sum() / len(df) * 100).round(2).to_dict(),
+        'row_count_ok'   : len(df) >= cfg.get('min_rows', 100),
+    }
+    return results
+
+qc = run_quality_check(df_raw, cfg['quality'])
+if not qc['row_count_ok']:
+    raise ValueError(f"Data terlalu sedikit: {qc['row_count']} baris")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+
+    <div class="callout dont"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Jangan cleaning tanpa alasan yang tercatat</div><div class="c-text"><pre># ❌ Tidak ada alasan
+df_clean = df_clean[df_clean['umur'] < 100]
+
+# ✅ Alasan jelas dan bisa dilacak
+# Hapus umur > 100: input error (konfirmasi klien 2025-03-10)
+df_clean = df_clean[df_clean['umur'] < 100]
+print(f"Terhapus: {len(df) - len(df_clean)} baris")</pre></div></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Cek khusus time series</div>
+    <div class="callout warn"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Urutan waktu krusial</div><div class="c-text">Selalu sort berdasarkan tanggal. Cek gap/tanggal yang hilang sebelum analisis atau modelling.</div></div></div>
+    <div class="code-wrap"><pre>df = df.sort_values('tanggal').reset_index(drop=True)
+
+# Deteksi gap
+freq     = cfg.get('date_freq', 'D')
+expected = pd.date_range(df['tanggal'].min(), df['tanggal'].max(), freq=freq)
+gaps     = expected.difference(pd.DatetimeIndex(df['tanggal']))
+print(f"Gap: {len(gaps)} periode hilang dari {len(expected)} total")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Cek wajib — Panel data</div>
+    <div class="callout warn"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Kombinasi (entitas × waktu) harus unik</div><div class="c-text">Panel data punya dua dimensi sekaligus: entitas (user, toko) dan waktu. Duplikat pada kombinasi keduanya adalah tanda data rusak — bukan sekadar duplikat baris biasa.</div></div></div>
+    <div class="code-wrap"><pre>key_cols = ['user_id', 'bulan']   # sesuaikan dengan datamu
+
+# 1. Cek duplikat pada kombinasi key (entitas + waktu)
+n_dup = df.duplicated(subset=key_cols).sum()
+print(f"Duplikat ({', '.join(key_cols)}): {n_dup}")
+assert n_dup == 0, "Panel data tidak boleh ada duplikat pada kombinasi (entitas, waktu)"
+
+# 2. Cek kelengkapan panel (balanced vs unbalanced)
+n_entities = df['user_id'].nunique()
+n_periods  = df['bulan'].nunique()
+n_expected = n_entities * n_periods
+print(f"Baris actual: {len(df):,} | Expected jika balanced: {n_expected:,}")
+if len(df) < n_expected:
+    print(f"⚠ Unbalanced panel: {n_expected - len(df):,} kombinasi hilang")
+
+# 3. Cek konsistensi kehadiran tiap entitas
+coverage = df.groupby('user_id')['bulan'].nunique()
+print(f"Periode per user — min: {coverage.min()} | max: {coverage.max()} | median: {coverage.median()}")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    <div class="callout tip"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Balanced atau unbalanced — keduanya valid, tapi harus terdokumentasi</div><div class="c-text">Balanced = semua entitas hadir di semua periode. Unbalanced = ada yang absen di beberapa periode. Catat mana yang berlaku di notebook dan pertimbangkan imputasi atau masking saat modelling.</div></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ EVAL -->
+<div id="page-eval" class="page">
+  <div class="ph"><div class="ph-title">Standar Evaluasi Model</div><div class="ph-desc">Strategi split dan metrik evaluasi berbeda per tipe data. Tentukan keduanya di config sebelum mulai training.</div></div>
+
+  <div class="section">
+    <div class="section-title">Pilih strategi split</div>
+    <div class="callout dont"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Jangan random split untuk time series dan panel data</div><div class="c-text">Random split menyebabkan <strong>data leakage</strong>: model "melihat masa depan" saat training. Test set harus selalu periode yang lebih baru.</div></div></div>
+    <table>
+      <tr><th>Tipe data</th><th>Strategi split</th><th>Catatan</th></tr>
+      <tr><td>Cross-sectional</td><td><code>train_test_split(stratify=y)</code></td><td>Wajib <code>stratify</code> jika imbalanced</td></tr>
+      <tr><td>Time series</td><td>Expanding window (TimeSeriesSplit)</td><td>Jangan random split!</td></tr>
+      <tr><td>Panel data</td><td>Split berdasarkan periode</td><td>Jangan split per baris!</td></tr>
+      <tr><td>Clustering</td><td>Tidak ada split</td><td>Evaluasi internal + bisnis</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Metrik per task</div>
+    <div class="card"><div class="card-title">Regresi</div>
+    <div class="code-wrap"><pre>MAE  = mean_absolute_error(y_test, y_pred)   # error rata2 dalam unit asli
+RMSE = mean_squared_error(y_test, y_pred)**0.5  # sensitif ke outlier
+MAPE = np.mean(np.abs((y_test - y_pred) / (y_test + 1e-8))) * 100  # % error</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+    <div class="card"><div class="card-title">Klasifikasi</div>
+    <div class="code-wrap"><pre>auc = roc_auc_score(y_test, y_pred_proba)     # default terbaik kebanyakan kasus
+# Recall    → False Negative mahal (fraud, penyakit)
+# Precision → False Positive mahal (notifikasi spam)</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+    <div class="card"><div class="card-title">Clustering</div>
+    <div class="callout tip" style="margin-bottom:10px"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Tidak ada "benar" atau "salah" — validasi bisnis wajib</div><div class="c-text">Metrik internal hanya membantu memilih jumlah cluster yang stabil secara statistik. Cluster yang bagus secara statistik belum tentu bermakna bisnis — wajib dikonfirmasi dengan domain expert atau klien.</div></div></div>
+    <div class="code-wrap"><pre>from sklearn.metrics import silhouette_score, davies_bouldin_score
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+
+# 1. Elbow method — cari "siku" di plot WCSS untuk pilih k
+wcss = []
+for k in range(2, 11):
+    km = KMeans(n_clusters=k, random_state=42, n_init=10)
+    km.fit(X_scaled)
+    wcss.append(km.inertia_)
+plt.plot(range(2, 11), wcss, 'o-')
+plt.xlabel('Jumlah cluster (k)'); plt.ylabel('WCSS'); plt.title('Elbow Method')
+
+# 2. Silhouette Score — semakin tinggi semakin baik (rentang -1 s.d. 1)
+sil = silhouette_score(X_scaled, labels)
+print(f"Silhouette Score : {sil:.3f}   # patokan awal: > 0.3")
+
+# 3. Davies–Bouldin Index — semakin rendah semakin baik
+dbi = davies_bouldin_score(X_scaled, labels)
+print(f"Davies–Bouldin   : {dbi:.3f}   # patokan awal: < 1.0")
+
+# 4. WAJIB: profil tiap cluster harus bisa dijelaskan ke klien
+df['cluster'] = labels
+print(df.groupby('cluster')[['fitur_utama_1', 'fitur_utama_2']].mean().round(2))</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    <div class="callout do" style="margin-top:10px"><div class="c-icon">✅</div><div class="c-body"><div class="c-label">Pilih k yang masuk akal bisnis, bukan hanya yang paling bagus metriknya</div><div class="c-text">Jika k=7 menghasilkan Silhouette tertinggi tapi tim tidak bisa membedakan dan menamai 7 segmen dengan jelas — pilih k yang lebih kecil. Cluster harus bisa ditindaklanjuti oleh bisnis.</div></div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Baseline wajib</div>
+    <div class="callout do"><div class="c-icon">✅</div><div class="c-body"><div class="c-label">Selalu bandingkan model dengan baseline</div><div class="c-text">Model yang hanya 5% lebih baik dari DummyRegressor perlu didiskusikan dengan senior sebelum dikirim ke klien.</div></div></div>
+    <div class="code-wrap"><pre>from sklearn.dummy import DummyRegressor
+baseline     = DummyRegressor(strategy='mean')
+baseline.fit(X_train, y_train)
+improvement  = (baseline_mae - model_mae) / baseline_mae * 100
+print(f"Improvement vs baseline: {improvement:.1f}%")
+if improvement < 5:
+    print("⚠ < 5% lebih baik dari baseline — diskusikan dengan senior")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ VERSIONING -->
+<div id="page-versioning" class="page">
+  <div class="ph"><div class="ph-title">Versioning Data &amp; Output</div><div class="ph-desc">Tanpa versioning, tidak ada cara untuk tahu kapan hasil berubah dan kenapa.</div></div>
+
+  <div class="section">
+    <div class="section-title">Konvensi nama file output</div>
+    <div class="code-wrap"><pre># Format: [nama]_YYYYMMDD.ext  atau  [nama]_YYYYMMDD_HHMM.ext
+#   YYYYMMDD = tanggal (tahun-bulan-hari)
+#   HHMM     = jam dan menit dalam format 24 jam (contoh: 1430 = pukul 14:30)
+
+# Output per-run — pakai tanggal; tambahkan jam jika bisa jalan >1x sehari
+predictions_20250315.csv           # cukup tanggal jika hanya sekali sehari
+model_20250315_1430.pkl            # _1430 = pukul 14:30 WIB
+
+# Output final ke klien — pakai versi semantik
+report_churn_v1.pdf
+report_churn_v2_revised.pdf</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Simpan model — selalu dua versi</div>
+    <div class="code-wrap"><pre># Format run_id: YYYYMMDD_HHMM (tanggal + jam-menit 24 jam)
+# Contoh: '20250315_1430' = 15 Maret 2025, pukul 14:30 WIB
+run_id = datetime.now().strftime('%Y%m%d_%H%M')
+
+# latest = selalu di-overwrite, dipakai pipeline/inference
+joblib.dump(model, MODEL_PATH / 'model_latest.pkl')
+
+# timestamped = tidak pernah dihapus, untuk audit & rollback
+joblib.dump(model, MODEL_PATH / f'model_{run_id}.pkl')
+
+# Wajib: simpan feature list bersama model
+with open(MODEL_PATH / 'feature_cols.json', 'w') as f:
+    json.dump(feature_cols, f)</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    <div class="callout warn"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Jangan hapus model lama</div><div class="c-text">Pindahkan ke subfolder <code>archive/</code> jika tidak aktif. File lama adalah bukti audit dan bahan rollback.</div></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Metadata tiap run — meta_[run_id].json</div>
+    <div class="card-desc" style="font-size:13px;color:var(--text2);margin-bottom:12px">Catatan kondisi saat model dijalankan. Berguna untuk audit dan debug: <em>"kenapa prediksi bulan ini berbeda dari bulan lalu?"</em> — jawaban biasanya ada di file ini.</div>
+    <div class="code-wrap"><pre>import json
+from datetime import datetime
+
+def save_model_metadata(run_id: str, params: dict, metrics: dict,
+                        feature_cols: list, model_path, cfg: dict) -> None:
+    """Simpan metadata run ke JSON — dipanggil setelah setiap training."""
+    meta = {
+        'run_id'       : run_id,                      # '20250315_1430'
+        'trained_at'   : datetime.now().isoformat(),  # timestamp lengkap ISO
+        'n_features'   : len(feature_cols),
+        'feature_cols' : feature_cols,
+        'model_params' : params,                      # hyperparameter yang dipakai
+        'metrics'      : metrics,                     # MAE, AUC, dll.
+        'train_period' : {
+            'start': str(cfg['data']['date_start']),
+            'end'  : str(cfg['data']['date_end']),
+        },
+    }
+    out = model_path / f'meta_{run_id}.json'
+    with open(out, 'w') as f:
+        json.dump(meta, f, indent=2, ensure_ascii=False)
+    print(f"✓ Metadata tersimpan: {out.name}")
+
+# Contoh isi meta_20250315_1430.json yang dihasilkan:
+# {
+#   "run_id": "20250315_1430",
+#   "trained_at": "2025-03-15T14:30:05.123456",
+#   "n_features": 45,
+#   "feature_cols": ["tenure_days", "avg_order_value", ...],
+#   "model_params": {"n_estimators": 300, "learning_rate": 0.05},
+#   "metrics": {"MAE": 45231, "AUC": 0.84},
+#   "train_period": {"start": "2024-01-01", "end": "2024-12-31"}
+# }</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Struktur outputs/</div>
+    <div class="code-wrap"><pre>outputs/
+├── models/
+│   ├── model_latest.pkl         ← selalu diperbarui
+│   ├── model_20250315_1430.pkl  ← audit trail
+│   ├── feature_cols.json        ← wajib ada
+│   └── meta_20250315_1430.json  ← metadata tiap run
+├── dashboard/
+│   ├── data_for_dashboard.csv   ← file aktif untuk BI
+│   └── archive/
+└── reports/
+    ├── model_metrics_history.csv ← akumulasi semua run
+    └── quality_check_20250315.json</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ TESTING -->
+<div id="page-testing" class="page">
+  <div class="ph"><div class="ph-title">Testing Ringan</div><div class="ph-desc">Tidak perlu framework berat. Cukup assertion sederhana di notebook dan smoke test di <code>src/</code>.</div></div>
+
+  <div class="section">
+    <div class="section-title">Assertion di notebook</div>
+    <div class="callout do"><div class="c-icon">✅</div><div class="c-body"><div class="c-label">Gunakan assert setelah setiap tahap kritis</div></div></div>
+    <div class="code-wrap"><pre>## Setelah load data
+assert len(df_raw) > 0, "Query BQ mengembalikan 0 baris"
+assert 'user_id' in df_raw.columns, "Kolom user_id tidak ada"
+
+## Setelah cleaning
+assert df_clean.isnull().sum().sum() == 0, "Masih ada missing value setelah cleaning"
+assert len(df_clean) > 0, "DataFrame kosong setelah cleaning"
+
+## Setelah export
+assert output_file.exists(), f"File output tidak terbuat: {output_file}"
+assert output_file.stat().st_size > 0, "File output kosong"
+print("✓ Semua assertion passed")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Smoke test untuk src/</div>
+    <div class="code-wrap"><pre># tests/test_smoke.py
+import pandas as pd, sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from src.features import build_features
+
+def test_build_features_returns_dataframe():
+    """build_features harus mengembalikan DataFrame, tidak boleh error."""
+    df_dummy = pd.DataFrame({
+        'user_id': [1, 2, 3],
+        'tanggal': pd.date_range('2025-01-01', periods=3),
+        'nilai': [100, 200, 300],
+    })
+    result = build_features(df_dummy, {})
+    assert isinstance(result, pd.DataFrame)
+    assert len(result) > 0
+    print("✓ test_build_features passed")
+
+if __name__ == '__main__':
+    test_build_features_returns_dataframe()
+    print("Semua smoke test passed")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ EXPERIMENT -->
+<div id="page-experiment" class="page">
+  <div class="ph"><div class="ph-title">Experiment Tracking</div><div class="ph-desc">Tanpa catatan eksperimen, kita sering mengulang percobaan yang sudah pernah dilakukan. Cukup CSV sederhana.</div></div>
+
+  <div class="section">
+    <div class="section-title">Log eksperimen ke CSV</div>
+    <div class="code-wrap"><pre>def log_experiment(params: dict, metrics: dict, notes: str = '') -> None:
+    """Catat satu percobaan model ke experiments.csv."""
+    row = {
+        'timestamp'  : pd.Timestamp.now().isoformat(),
+        'run_id'     : datetime.now().strftime('%Y%m%d_%H%M'),
+        'model_type' : params.get('model_type', ''),
+        'n_features' : params.get('n_features', ''),
+        'train_score': metrics.get('train_score', ''),
+        'test_score' : metrics.get('test_score', ''),
+        'MAE'        : metrics.get('MAE', ''),
+        'notes'      : notes,
+    }
+    exp_file = REPORT_PATH / 'experiments.csv'
+    pd.DataFrame([row]).to_csv(exp_file, mode='a',
+        header=not exp_file.exists(), index=False)
+
+# Contoh pemakaian
+log_experiment(
+    params  = {'model_type': 'LightGBM', 'n_features': 45},
+    metrics = {'train_score': 0.92, 'test_score': 0.84, 'MAE': 45000},
+    notes   = 'Hapus fitur lag30 — hasil lebih baik dari run sebelumnya'
+)</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Konvensi kolom notes</div>
+    <div class="card">
+    <div class="two-col">
+      <div><div class="col-label">✅ Berguna</div><pre>tambah fitur rolling_30d_mean
+hapus outlier > p99
+ganti RF → LightGBM
+filter data &lt; 2023 (anomali)</pre></div>
+      <div><div class="col-label">❌ Tidak berguna</div><pre>coba lagi
+update
+model baru
+test 3</pre></div>
+    </div></div>
+    <div class="callout tip"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Baca experiments.csv sebelum mulai eksperimen baru</div><div class="c-text"><pre>df_exp = pd.read_csv(REPORT_PATH / 'experiments.csv')
+print(df_exp.sort_values('test_score', ascending=False).head(5).to_string())</pre></div></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ INSIGHT -->
+<div id="page-insight" class="page">
+  <div class="ph"><div class="ph-title">Insight &amp; Rekomendasi</div><div class="ph-desc">Klien tidak membayar untuk angka — mereka membayar untuk keputusan. Setiap deliverable harus menjawab "so what?" dan "what's next?"</div></div>
+
+  <div class="section">
+    <div class="section-title">Struktur insight yang baik</div>
+    <div class="card"><div class="card-title">Format: Temuan → Implikasi → Rekomendasi</div>
+    <div class="code-wrap"><pre>### Temuan
+Tingkat churn pada segmen usia 25-35 tahun mencapai 42%,
+3x lebih tinggi dibanding segmen usia 45+ (14%).
+
+### Implikasi
+Segmen 25-35 adalah kelompok dengan lifetime value tertinggi
+tapi paling berisiko churn dalam 90 hari ke depan.
+
+### Rekomendasi
+1. Prioritaskan retention campaign untuk segmen 25-35 tahun
+   dengan skor risiko churn > 0.7 (±12.000 user bulan ini).
+2. Investigasi lebih lanjut: apakah churn didorong oleh harga
+   atau pengalaman produk? (perlu data NPS).</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Standar penulisan angka</div>
+    <div class="card">
+    <div class="two-col">
+      <div><div class="col-label">✅ Kontekstual</div><pre>Churn naik 8 pp (23% → 31%)
+Revenue terdampak ±Rp 4,2 M/bulan
+2.340 user dari 45.000 total</pre></div>
+      <div><div class="col-label">❌ Tanpa konteks</div><pre>Akurasi model: 0.87
+RMSE: 45231.2
+p-value: 0.003</pre></div>
+    </div></div>
+    <div class="callout do"><div class="c-icon">✅</div><div class="c-body"><div class="c-label">Aturan</div><div class="c-text">Setiap angka harus bisa dijawab <em>"dibanding apa?"</em> — sertakan perbandingan: periode sebelumnya, segmen lain, target yang disepakati, atau baseline.</div></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Limitasi wajib dicantumkan</div>
+    <div class="callout warn"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Selalu ada section Limitasi &amp; Asumsi</div><div class="c-text">Jangan sembunyikan limitasi. Klien yang tahu limitasi bisa mengambil keputusan lebih baik.</div></div></div>
+    <div class="code-wrap"><pre>## Limitasi & Asumsi
+- Data hanya mencakup transaksi online; offline tidak termasuk
+- Model ditraining Jan–Des 2024; performa di luar periode belum divalidasi
+- Missing value kolom 'region' (12%) diimputasi dengan modus</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ MATURITY -->
+<div id="page-maturity" class="page">
+  <div class="ph"><div class="ph-title">Pipeline Maturity Levels</div><div class="ph-desc">Tidak semua project butuh pipeline otomatis penuh. Pilih level yang sesuai.</div></div>
+
+  <div class="section">
+    <div class="section-title">Empat level pipeline</div>
+    <div class="card"><div class="card-title" style="color:var(--text3)">Level 1 — Manual (one-time)</div><div class="card-desc">Notebook dijalankan sekali oleh DS. Output dikirim langsung ke klien. Cocok: analisis ad-hoc, proof-of-concept.</div></div>
+    <div class="card"><div class="card-title" style="color:var(--amber)">Level 2 — Semi-otomatis (berkala manual)</div><div class="card-desc">DS menjalankan pipeline secara manual setiap periode. Ada <code>run_pipeline.py</code> tapi tidak terjadwal. Cocok: reporting bulanan.</div></div>
+    <div class="card"><div class="card-title" style="color:var(--blue)">Level 3 — Terjadwal (DE-managed)</div><div class="card-desc">DE menjadwalkan <code>run_pipeline.py</code> via cron atau Cloud Scheduler. DS tidak perlu terlibat setiap run. Cocok: dashboard live harian/mingguan.</div></div>
+    <div class="card"><div class="card-title" style="color:var(--green)">Level 4 — Production (DE-owned)</div><div class="card-desc">Pipeline sepenuhnya dikelola DE dengan monitoring, alerting, dan retry logic di Airflow / Cloud Composer. Cocok: produk kritikal, SLA ketat.</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Cara tentukan level yang tepat</div>
+    <table>
+      <tr><th>Frekuensi refresh data</th><th>Level</th></tr>
+      <tr><td>Sekali pakai</td><td>Level 1</td></tr>
+      <tr><td>Berkala, tidak ketat</td><td>Level 2</td></tr>
+      <tr><td>Berkala, perlu otomasi</td><td>Level 3</td></tr>
+      <tr><td>Kritikal / real-time</td><td>Level 4 — diskusikan dengan DE sejak brief</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ ERROR LOG -->
+<div id="page-errlog" class="page">
+  <div class="ph"><div class="ph-title">Error Handling &amp; Logging</div><div class="ph-desc">Pipeline yang gagal diam-diam lebih berbahaya dari pipeline yang crash dengan jelas.</div></div>
+
+  <div class="section">
+    <div class="section-title">Setup logging standar</div>
+    <div class="code-wrap"><pre>import logging
+from pathlib import Path
+
+def setup_logger(name: str, log_file: Path = None) -> logging.Logger:
+    """Setup logger dengan output ke console dan opsional ke file."""
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+    fmt = logging.Formatter('%(asctime)s | %(levelname)s | %(name)s | %(message)s')
+    ch = logging.StreamHandler()
+    ch.setFormatter(fmt)
+    logger.addHandler(ch)
+    if log_file:
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        fh = logging.FileHandler(log_file)
+        fh.setFormatter(fmt)
+        logger.addHandler(fh)
+    return logger
+
+logger = setup_logger(__name__, log_file=Path('outputs/reports/pipeline.log'))</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Level logging yang tepat</div>
+    <div class="code-wrap"><pre>logger.debug(...)    # detail teknis — nonaktif di produksi
+logger.info(...)     # status normal: "Step 1 selesai, 50k baris"
+logger.warning(...)  # tidak normal tapi pipeline tetap jalan
+logger.error(...)    # operasi gagal — selalu diikuti raise</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Pola error handling</div>
+    <div class="callout dont"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Jangan — menyembunyikan error</div><div class="c-text"><pre>try:
+    df = load_from_bq(query)
+except:
+    pass  # pipeline terus jalan dengan data kosong!</pre></div></div></div>
+    <div class="callout do"><div class="c-icon">✅</div><div class="c-body"><div class="c-label">Benar — tangkap, log, dan re-raise</div><div class="c-text"><pre>try:
+    df = load_from_bq(query)
+except Exception as e:
+    logger.error(f"BQ query gagal: {e}")
+    raise  # pipeline berhenti dengan jelas</pre></div></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ HANDOFF -->
+<div id="page-handoff" class="page">
+  <div class="ph"><div class="ph-title">Handoff ke Data Engineer</div><div class="ph-desc">Handoff yang buruk = pipeline yang gagal saat DE coba jalankan.</div></div>
+
+  <div class="section">
+    <div class="section-title">Yang harus diserahkan ke DE</div>
+    <div class="card"><div class="card-title">1. run_pipeline.py yang sudah teruji</div>
+    <div class="os-tabs">
+      <button class="os-btn active" onclick="ostab('cmdh1','mac',this)">Mac / Linux</button>
+      <button class="os-btn" onclick="ostab('cmdh1','win',this)">Windows</button>
+    </div>
+    <div id="cmdh1-mac" class="os-panel active"><div class="code-wrap"><pre>cd /workspace/nama-project
+python pipeline/run_pipeline.py --config config/config.yaml
+# Pastikan: tidak ada error, output file terbuat, log tampil jelas</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+    <div id="cmdh1-win" class="os-panel"><div class="code-wrap"><pre>cd C:\workspace\nama-project
+python pipeline/run_pipeline.py --config config/config.yaml
+# Pastikan: tidak ada error, output file terbuat, log tampil jelas</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+    </div>
+    <div class="card"><div class="card-title">2. requirements.txt up-to-date</div>
+    <div class="code-wrap"><pre>pip freeze > requirements.txt
+python -c "import pandas; import sklearn; print('OK')"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+    <div class="card"><div class="card-title">3. handoff_notes.md</div>
+    <div class="code-wrap"><pre># handoff_notes.md
+
+## Informasi Pipeline
+- Frekuensi run: bulanan (setiap tanggal 1)
+- Estimasi durasi: ~15 menit
+
+## Input
+- BQ table: analytics.churn_features
+
+## Output
+- BQ table: ds_results.bankbca_churn_predictions (WRITE_TRUNCATE)
+- GCS: gs://bucket/ds-results/predictions_[tanggal].csv
+
+## Yang Perlu Dimonitor
+- Jumlah baris output harus > 10.000
+- Kolom predicted_proba harus antara 0–1
+
+## Kontak
+- DS penanggung jawab: [Nama] ([email])
+- Terakhir ditest: [tanggal]</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Checklist sebelum handoff</div>
+    <div class="card"><div class="code-wrap"><pre>□ run_pipeline.py bisa dijalankan end-to-end tanpa error
+□ requirements.txt sudah diperbarui
+□ config/config.yaml lengkap (tidak ada placeholder)
+□ .env.example berisi semua variabel yang dibutuhkan
+□ handoff_notes.md sudah ditulis
+□ Format output sudah dikonfirmasi dengan DE
+□ Schema output BQ sudah dikomunikasikan
+□ Ada cara test apakah pipeline berhasil (cek row count)</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ DASHBOARD -->
+<div id="page-dashboard" class="page">
+  <div class="ph"><div class="ph-title">Dashboard / Data Product Readiness</div><div class="ph-desc">Data untuk dashboard punya standar berbeda. Format, naming, dan freshness harus sesuai BI tools klien.</div></div>
+
+  <div class="section">
+    <div class="section-title">Format standar</div>
+    <div class="card"><div class="card-title">Format tanggal — selalu YYYY-MM-DD</div>
+    <div class="callout dont" style="margin-top:8px"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Jangan</div><div class="c-text">Format <code>15/03/2025</code> atau <code>Mar-25</code> menyebabkan masalah parsing di BI tools.</div></div></div>
+    <div class="code-wrap"><pre>for col in df_out.select_dtypes('datetime').columns:
+    df_out[col] = df_out[col].dt.strftime('%Y-%m-%d')</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+    <div class="card"><div class="card-title">Nama kolom — sesuaikan dengan kebutuhan pengguna bisnis</div>
+    <div class="code-wrap"><pre>column_mapping = {
+    'user_id'         : 'ID Pelanggan',
+    'predicted_proba' : 'Skor Risiko Churn',
+    'order_date'      : 'Tanggal Order',
+}
+df_dashboard = df_result.rename(columns=column_mapping)</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Validasi sebelum upload</div>
+    <div class="code-wrap"><pre>def validate_dashboard_output(df: pd.DataFrame, cfg: dict) -> None:
+    """Validasi sebelum upload ke GCS/BQ untuk dashboard."""
+    required_cols = cfg.get('dashboard_required_cols', [])
+    missing = [c for c in required_cols if c not in df.columns]
+    assert not missing, f"Kolom hilang: {missing}"
+    assert len(df) >= cfg.get('min_dashboard_rows', 100), f"Output terlalu sedikit: {len(df)}"
+    for col in required_cols:
+        assert df[col].isnull().sum() == 0, f"Missing value di {col}"
+    print(f"✓ Dashboard valid: {len(df):,} baris")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ COLLAB -->
+<div id="page-collab" class="page">
+  <div class="ph"><div class="ph-title">Kolaborasi Tim</div><div class="ph-desc">Standar kerja tim mencegah konflik dan memudahkan review — penting di tim campuran senior-junior.</div></div>
+
+  <div class="section">
+    <div class="section-title">Tanggung jawab per project</div>
+    <div class="callout do"><div class="c-icon">✅</div><div class="c-body"><div class="c-label">Setiap project punya satu PIC — tetapkan sejak brief</div><div class="c-text">PIC bertanggung jawab penuh: kualitas output, komunikasi klien, handoff ke DE.</div></div></div>
+    <div class="code-wrap"><pre>## Tim Project (cantumkan di README.md)
+- PIC DS    : [Nama Senior] — kualitas & delivery
+- DS Support: [Nama Junior] — EDA dan cleaning
+- DE        : [Nama DE] — infra dan scheduling</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Update progres ke senior</div>
+    <div class="code-wrap"><pre>Milestone yang perlu di-update ke senior:
+□ EDA selesai → share temuan utama (bukan detail teknis)
+□ Cleaning selesai → konfirmasi keputusan handling missing/outlier
+□ Model pertama jalan → share metrik awal vs target
+□ Siap handoff ke DE → minta review checklist handoff
+□ Klien minta revisi → eskalasi ke senior SEBELUM dieksekusi</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Workflow review kode</div>
+    <div class="card"><div class="card-title">Dengan Git</div>
+    <div class="code-wrap"><pre>git checkout -b feat/01-eda-cohort-[nama-junior]
+git add notebooks/01_eda_cohort.ipynb
+git commit -m "add: EDA cohort bulanan selesai, siap review"
+git push origin feat/01-eda-cohort-[nama-junior]
+# Buat PR → tag senior sebagai reviewer</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+    <div class="card"><div class="card-title">Tanpa Git</div>
+    <div class="card-desc">Junior kirim dengan format versi: <code>01_eda_cohort_v1_[nama]_20250315.ipynb</code>. Setelah approved, simpan versi final di <code>notebooks/01_eda_cohort.ipynb</code>.</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ CHECKLIST / DOD -->
+<div id="page-checklist" class="page">
+  <div class="ph"><div class="ph-title">Definition of Done &amp; Checklist</div><div class="ph-desc">Centang semua item yang relevan sebelum share ke senior atau klien. Project belum selesai hanya karena notebook sudah jalan.</div></div>
+
+  <div class="prog-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+  <div class="prog-txt" id="prog-txt">0 / 27 selesai</div>
+
+  <div class="section">
+    <div class="section-title">Standar dasar — wajib semua tipe project</div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c1" onchange="tick()"><label class="cl-text" for="c1"><div class="cl-main">Notebook bisa dijalankan ulang dari awal oleh orang lain</div><div class="cl-hint">Kernel → Restart &amp; Run All. Tidak ada error sampai sel terakhir.</div></label><span class="cl-badge w">Wajib</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c2" onchange="tick()"><label class="cl-text" for="c2"><div class="cl-main">Sel pertama berisi tujuan, author, dan estimasi run</div><div class="cl-hint">Sel Markdown di baris paling atas: tujuan, output, sumber data, nama &amp; email author, estimasi waktu run. Estimasi penting — notebook yang lambat bisa menghambat pipeline.</div></label><span class="cl-badge w">Wajib</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c3" onchange="tick()"><label class="cl-text" for="c3"><div class="cl-main">Tidak ada path absolut di dalam kode</div><div class="cl-hint">Tidak ada <code>C:/Users/NamaKamu/</code>. Pakai <code>PROJECT_ROOT / 'data' / 'raw'</code>.</div></label><span class="cl-badge w">Wajib</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c4" onchange="tick()"><label class="cl-text" for="c4"><div class="cl-main">Setiap fungsi ada docstring</div><div class="cl-hint">Baris pertama dalam fungsi: kalimat singkat dalam tanda kutip tiga.</div></label><span class="cl-badge w">Wajib</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c5" onchange="tick()"><label class="cl-text" for="c5"><div class="cl-main">Tidak ada credentials yang ditulis langsung di kode</div><div class="cl-hint">Tidak ada <code>project_id = "nama-project"</code> atau <code>password = "abc"</code>. Pakai <code>.env</code> dan <code>os.getenv()</code>.</div></label><span class="cl-badge w">Wajib</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c6" onchange="tick()"><label class="cl-text" for="c6"><div class="cl-main">Semua variabel punya nama yang bermakna</div><div class="cl-hint">Tidak ada <code>df</code>, <code>df2</code>, <code>temp</code>, <code>x</code>. Ganti dengan nama deskriptif seperti <code>df_transaksi_clean</code>.</div></label><span class="cl-badge w">Wajib</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c7" onchange="tick()"><label class="cl-text" for="c7"><div class="cl-main">Nama folder project: <code>[tahunbulan]_[klien]_[topik]</code></div><div class="cl-hint">Contoh benar: <code>202501_tokopedia_churn</code>. Format tahunbulan (YYYYMM) di depan agar mudah di-sort. Hindari spasi, huruf kapital, dan nama generik.</div></label><span class="cl-badge w">Wajib</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c8" onchange="tick()"><label class="cl-text" for="c8"><div class="cl-main">Ada README.md yang menjelaskan project</div><div class="cl-hint">Minimal: tujuan project, sumber data, cara menjalankan notebook.</div></label><span class="cl-badge w">Wajib</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c9" onchange="tick()"><label class="cl-text" for="c9"><div class="cl-main">File <code>.env</code> dan <code>.json</code> tidak masuk ke Git</div><div class="cl-hint">Cek <code>git status</code> — tidak ada <code>.env</code> atau <code>.json</code> di staged files. Sudah ada di <code>.gitignore</code>.</div></label><span class="cl-badge w">Wajib</span></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Analisis &amp; Reporting — centang jika tipe project ini</div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c10" onchange="tick()"><label class="cl-text" for="c10"><div class="cl-main">Semua pertanyaan analitik di brief terjawab</div><div class="cl-hint">Cross-check satu per satu dengan scope yang disepakati saat brief.</div></label><span class="cl-badge s">Analisis</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c11" onchange="tick()"><label class="cl-text" for="c11"><div class="cl-main">Ada section Temuan → Implikasi → Rekomendasi</div><div class="cl-hint">Setiap temuan penting harus punya implikasi bisnis dan rekomendasi tindak lanjut yang konkret.</div></label><span class="cl-badge s">Analisis</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c12" onchange="tick()"><label class="cl-text" for="c12"><div class="cl-main">Angka sudah dikonfirmasi dengan sumber data (cross-check manual)</div><div class="cl-hint">Setidaknya satu angka kunci dicek ulang langsung dari sumber aslinya.</div></label><span class="cl-badge s">Analisis</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c13" onchange="tick()"><label class="cl-text" for="c13"><div class="cl-main">Limitasi dan asumsi sudah dicantumkan</div><div class="cl-hint">Section "Limitasi &amp; Asumsi" ada di notebook atau deck — jangan disembunyikan.</div></label><span class="cl-badge s">Analisis</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c14" onchange="tick()"><label class="cl-text" for="c14"><div class="cl-main">Output final ada di <code>outputs/</code> dengan nama file yang benar</div><div class="cl-hint">Format: <code>[deskripsi]_YYYYMMDD.csv</code> atau <code>report_[topik]_v1.pdf</code>. Nama generik seperti <code>final.csv</code> tidak diperbolehkan.</div></label><span class="cl-badge s">Analisis</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c15" onchange="tick()"><label class="cl-text" for="c15"><div class="cl-main">Sudah di-review oleh senior DS</div><div class="cl-hint">Senior sudah lihat notebook dan output sebelum dikirim ke klien.</div></label><span class="cl-badge s">Analisis</span></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Modelling / ML — semua poin Analisis, ditambah</div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c16" onchange="tick()"><label class="cl-text" for="c16"><div class="cl-main">Metrik evaluasi memenuhi target yang disepakati di brief</div><div class="cl-hint">Bandingkan dengan target eksplisit dari brief — bukan hanya "angkanya terasa bagus".</div></label><span class="cl-badge b">Modelling</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c17" onchange="tick()"><label class="cl-text" for="c17"><div class="cl-main">Perbandingan dengan baseline sudah dilakukan</div><div class="cl-hint">Minimal DummyRegressor / DummyClassifier. Improvement &lt; 5% = diskusikan dulu dengan senior sebelum dikirim.</div></label><span class="cl-badge b">Modelling</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c18" onchange="tick()"><label class="cl-text" for="c18"><div class="cl-main">Gap train–test &lt; 0.1 (tidak ada overfitting signifikan)</div><div class="cl-hint">Jika gap besar, dokumentasikan kenapa dan sudah didiskusikan dengan senior sebelum lanjut.</div></label><span class="cl-badge b">Modelling</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c19" onchange="tick()"><label class="cl-text" for="c19"><div class="cl-main">File model + <code>feature_cols.json</code> ada di <code>outputs/models/</code></div><div class="cl-hint">Format model disesuaikan tipe: <code>model_latest.pkl</code> (scikit-learn/XGBoost), <code>model_latest.h5</code> atau folder <code>saved_model/</code> (Keras/TF), <code>model_latest.pt</code> (PyTorch). Dua file wajib hadir bersamaan — model tanpa feature list tidak bisa dipakai ulang dengan benar.</div></label><span class="cl-badge b">Modelling</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c20" onchange="tick()"><label class="cl-text" for="c20"><div class="cl-main"><code>run_pipeline.py</code> bisa dijalankan end-to-end tanpa error</div><div class="cl-hint">Test: <code>python pipeline/run_pipeline.py --config config/config.yaml</code>. Output file terbuat, log tampil jelas.</div></label><span class="cl-badge b">Modelling</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c21" onchange="tick()"><label class="cl-text" for="c21"><div class="cl-main"><code>handoff_notes.md</code> sudah ditulis</div><div class="cl-hint">Berisi: frekuensi run, tabel input/output BQ atau GCS, yang perlu dimonitor, dan kontak DS penanggung jawab.</div></label><span class="cl-badge b">Modelling</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c22" onchange="tick()"><label class="cl-text" for="c22"><div class="cl-main">DE sudah konfirmasi bisa menjalankan pipeline</div><div class="cl-hint">DE test di environment mereka sendiri — bukan hanya "sudah dikasih filenya".</div></label><span class="cl-badge b">Modelling</span></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Dashboard / Data Product — semua poin di atas, ditambah</div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c23" onchange="tick()"><label class="cl-text" for="c23"><div class="cl-main"><code>validate_dashboard_output()</code> passed tanpa error</div><div class="cl-hint">Semua kolom required ada, tidak ada missing value di kolom kunci, row count memenuhi minimum config.</div></label><span class="cl-badge a">Dashboard</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c24" onchange="tick()"><label class="cl-text" for="c24"><div class="cl-main">Format tanggal, nama kolom, dan tipe data sesuai BI tools klien</div><div class="cl-hint">Tanggal: YYYY-MM-DD. Nama kolom sudah di-rename sesuai kebutuhan pengguna bisnis.</div></label><span class="cl-badge a">Dashboard</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c25" onchange="tick()"><label class="cl-text" for="c25"><div class="cl-main">DE sukses test consume data dari BQ/GCS</div><div class="cl-hint">DE konfirmasi bisa baca data dan format sesuai ekspektasi dashboard — bukan hanya "sudah diupload".</div></label><span class="cl-badge a">Dashboard</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c26" onchange="tick()"><label class="cl-text" for="c26"><div class="cl-main">Dashboard bisa dibuka dan menampilkan data terbaru</div><div class="cl-hint">Test langsung di environment klien — bukan hanya di preview lokal.</div></label><span class="cl-badge a">Dashboard</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c27" onchange="tick()"><label class="cl-text" for="c27"><div class="cl-main">Ada dokumentasi refresh schedule dan cara troubleshoot</div><div class="cl-hint">Siapa yang dihubungi jika data tidak update? Apa yang harus dicek pertama kali?</div></label><span class="cl-badge a">Dashboard</span></div>
+  </div>
+
+  <div class="callout dont"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Jangan centang kalau belum benar-benar selesai</div><div class="c-text">Kalau ada item yang tidak terpenuhi karena constraints tertentu, komunikasikan ke senior dan catat sebagai known limitation — jangan disembunyikan.</div></div></div>
+
+  <button onclick="resetCL()" style="margin-top:8px;font-size:12px;padding:6px 16px;border:1px solid var(--border);border-radius:20px;cursor:pointer;background:var(--surface);color:var(--text2);font-family:var(--sans)">Reset semua</button>
+</div>
+
+</main>
+</div>
+
+<script>
+// navigation
+function nav(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  el.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// tabs
+function tab(group, id, el) {
+  document.querySelectorAll('[id^="' + group + '-"]').forEach(p => p.classList.remove('active'));
+  el.closest('.tabs').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(group + '-' + id).classList.add('active');
+  el.classList.add('active');
+}
+
+// os tabs (Mac/Linux vs Windows)
+function ostab(group, id, el) {
+  document.querySelectorAll('[id^="' + group + '-"]').forEach(p => p.classList.remove('active'));
+  el.closest('.os-tabs').querySelectorAll('.os-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(group + '-' + id).classList.add('active');
+  el.classList.add('active');
+}
+
+// copy button
+function cp(btn) {
+  const pre = btn.closest('.code-wrap').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+// checklist
+const TOTAL = 27;
+function tick() {
+  const done = document.querySelectorAll('.cl-cb:checked').length;
+  document.getElementById('prog').style.width = (done / TOTAL * 100) + '%';
+  document.getElementById('prog-txt').textContent = done + ' / ' + TOTAL + ' selesai';
+  document.querySelectorAll('.cl-cb').forEach(cb => {
+    const lbl = cb.nextElementSibling;
+    lbl.classList.toggle('done', cb.checked);
+  });
+}
+function resetCL() {
+  document.querySelectorAll('.cl-cb').forEach(cb => { cb.checked = false; });
+  tick();
+}
+</script>
+</body>
+</html>
