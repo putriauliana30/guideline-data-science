@@ -18,6 +18,15 @@
   --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',sans-serif;
   --r:6px; --rl:10px;
 }
+[data-theme="dark"] {
+  --bg:#0F0F0D; --surface:#1C1B18; --surface2:#252420;
+  --border:#2E2C28; --border2:#3D3B36;
+  --text:#E8E6DF; --text2:#9A9890; --text3:#5C5A52;
+  --green:#4ADE80; --green-bg:#0C1F13; --green-bd:#1A3D22;
+  --red:#F87171;   --red-bg:#200D0D;   --red-bd:#3D1A1A;
+  --blue:#60A5FA;  --blue-bg:#0D1929;  --blue-bd:#1A334D;
+  --amber:#FBBF24; --amber-bg:#201500; --amber-bd:#3D2A00;
+}
 *, *::before, *::after { box-sizing: border-box; margin:0; padding:0 }
 html { background: var(--bg) }
 body { font-family: var(--sans); color: var(--text); font-size:14px; line-height:1.65 }
@@ -196,8 +205,11 @@ tr:last-child td { border-bottom:none }
 <!-- SIDEBAR -->
 <nav class="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-mark"><div class="logo-dot"></div>DS Playbook</div>
-    <div class="logo-sub">Panduan coding tim data science</div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+      <div class="logo-mark"><div class="logo-dot"></div><span>Data Science<br>Project Playbook</span></div>
+      <button onclick="toggleTheme()" id="theme-btn" style="background:none;border:1px solid var(--border2);border-radius:20px;padding:3px 9px;cursor:pointer;font-size:11px;color:var(--text3);font-family:var(--mono);white-space:nowrap;flex-shrink:0;margin-top:2px;transition:all .15s">☀</button>
+    </div>
+    <div class="logo-sub">Panduan kerja analyst dalam menjalankan project data science</div>
   </div>
   <div class="nav-group">
     <span class="nav-label">Project</span>
@@ -238,7 +250,7 @@ tr:last-child td { border-bottom:none }
     <span class="nav-label">Submit</span>
     <a class="nav-item" onclick="nav('checklist',this)"><span class="nav-ico">✓</span>DoD &amp; Checklist</a>
   </div>
-  <div class="sidebar-footer">v2.0 · Tim DS Konsultan</div>
+  <div class="sidebar-footer">v2.0 · Tim Advance Analytics</div>
 </nav>
 
 <main class="main">
@@ -2847,6 +2859,22 @@ function resetCL() {
   document.querySelectorAll('.cl-cb').forEach(cb => { cb.checked = false; });
   tick();
 }
+
+// dark mode
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  setTheme(isDark ? 'light' : 'dark');
+}
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+  document.getElementById('theme-btn').textContent = theme === 'dark' ? '☀ Light' : '☾ Dark';
+}
+(function() {
+  const saved = localStorage.getItem('theme') ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  setTheme(saved);
+})();
 </script>
 </body>
 </html>
