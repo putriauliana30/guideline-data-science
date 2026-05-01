@@ -215,17 +215,23 @@ tr:last-child td { border-bottom:none }
     <a class="nav-item" onclick="nav('git',this)"><span class="nav-ico">⑂</span>Git dasar</a>
   </div>
   <div class="nav-group">
-    <span class="nav-label">Playbook</span>
+    <span class="nav-label">Analisis</span>
     <a class="nav-item" onclick="nav('dq',this)"><span class="nav-ico">◉</span>Data Quality</a>
-    <a class="nav-item" onclick="nav('eval',this)"><span class="nav-ico">≋</span>Model Evaluation</a>
-    <a class="nav-item" onclick="nav('versioning',this)"><span class="nav-ico">◷</span>Versioning</a>
     <a class="nav-item" onclick="nav('testing',this)"><span class="nav-ico">⊘</span>Testing</a>
     <a class="nav-item" onclick="nav('experiment',this)"><span class="nav-ico">⊛</span>Experiment Tracking</a>
+    <a class="nav-item" onclick="nav('eval',this)"><span class="nav-ico">≋</span>Model Evaluation</a>
+    <a class="nav-item" onclick="nav('versioning',this)"><span class="nav-ico">◷</span>Versioning</a>
+  </div>
+  <div class="nav-group">
+    <span class="nav-label">Delivery</span>
     <a class="nav-item" onclick="nav('insight',this)"><span class="nav-ico">◎</span>Insight &amp; Rekomendasi</a>
-    <a class="nav-item" onclick="nav('maturity',this)"><span class="nav-ico">▲</span>Pipeline Maturity</a>
-    <a class="nav-item" onclick="nav('errlog',this)"><span class="nav-ico">⊡</span>Error &amp; Logging</a>
-    <a class="nav-item" onclick="nav('handoff',this)"><span class="nav-ico">→</span>Handoff ke DE</a>
     <a class="nav-item" onclick="nav('dashboard',this)"><span class="nav-ico">▣</span>Dashboard Readiness</a>
+    <a class="nav-item" onclick="nav('errlog',this)"><span class="nav-ico">⊡</span>Error &amp; Logging</a>
+    <a class="nav-item" onclick="nav('maturity',this)"><span class="nav-ico">▲</span>Pipeline Maturity</a>
+    <a class="nav-item" onclick="nav('handoff',this)"><span class="nav-ico">→</span>Handoff ke DE</a>
+  </div>
+  <div class="nav-group">
+    <span class="nav-label">Tim</span>
     <a class="nav-item" onclick="nav('collab',this)"><span class="nav-ico">⊕</span>Kolaborasi Tim</a>
   </div>
   <div class="nav-group">
@@ -2087,49 +2093,96 @@ assert len(df_check) > 0, f"File CSV kosong (0 baris data): {output_file}"</pre>
 
 <!-- ═══════════════════════════════════════════════ EXPERIMENT -->
 <div id="page-experiment" class="page">
-  <div class="ph"><div class="ph-title">Experiment Tracking</div><div class="ph-desc">Tanpa catatan eksperimen, kita sering mengulang percobaan yang sudah pernah dilakukan. Cukup CSV sederhana.</div></div>
+  <div class="ph"><div class="ph-title">Experiment Tracking</div><div class="ph-desc">Saat modelling, kamu akan coba banyak kombinasi — model, feature, parameter. Tanpa catatan, kamu tidak tahu mana yang terbaik dan kenapa.</div></div>
 
   <div class="section">
-    <div class="section-title">Log eksperimen ke CSV</div>
-    <div class="code-wrap"><pre>def log_experiment(params: dict, metrics: dict, notes: str = '') -> None:
-    """Catat satu percobaan model ke experiments.csv."""
+    <div class="section-title">Masalah yang sering terjadi tanpa experiment tracking</div>
+    <div class="callout dont"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Skenario yang sering terjadi</div><div class="c-text">Hari Senin coba Random Forest → AUC 0.78. Hari Selasa coba LightGBM → AUC 0.82. Hari Rabu coba ganti feature → AUC 0.79. Hari Kamis lupa mana yang 0.82 dan apa bedanya dengan yang 0.79. Harus run ulang dari awal.</div></div></div>
+    <div class="card" style="margin-top:10px">
+      <div class="card-title">Experiment tracking = buku catatan lab untuk modelling</div>
+      <div class="card-desc">Setiap kali kamu run model dengan konfigurasi berbeda, catat hasilnya ke satu file. Sehingga kamu bisa jawab: <em>"Run mana yang terbaik? Apa yang berbeda dari run sebelumnya? Kenapa hasilnya lebih baik?"</em></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Apa yang perlu dicatat tiap run</div>
+    <table>
+      <tr><th>Kolom</th><th>Isinya</th><th>Contoh</th></tr>
+      <tr><td><code>timestamp</code></td><td>Kapan run ini dijalankan</td><td><code>2025-03-15T14:30:05</code></td></tr>
+      <tr><td><code>model_type</code></td><td>Jenis model yang dipakai</td><td><code>LightGBM</code>, <code>RandomForest</code></td></tr>
+      <tr><td><code>n_features</code></td><td>Berapa feature yang dipakai</td><td><code>45</code></td></tr>
+      <tr><td><code>train_score</code></td><td>Performa di training set</td><td><code>0.92</code></td></tr>
+      <tr><td><code>test_score</code></td><td>Performa di test set — yang paling penting</td><td><code>0.84</code></td></tr>
+      <tr><td><code>notes</code></td><td><strong>Apa yang berbeda dari run sebelumnya</strong> — ini paling penting</td><td><code>hapus fitur lag30, ganti max_depth 5→7</code></td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Cara catat — tambahkan di akhir notebook modelling</div>
+    <div class="code-wrap"><pre>import pandas as pd
+from datetime import datetime
+from pathlib import Path
+
+REPORT_PATH = Path('outputs/reports')
+REPORT_PATH.mkdir(parents=True, exist_ok=True)
+
+def log_experiment(model_type, n_features, train_score, test_score, notes=''):
+    """Tambahkan satu baris hasil run ke experiments.csv."""
     row = {
-        'timestamp'  : pd.Timestamp.now().isoformat(),
-        'run_id'     : datetime.now().strftime('%Y%m%d_%H%M'),
-        'model_type' : params.get('model_type', ''),
-        'n_features' : params.get('n_features', ''),
-        'train_score': metrics.get('train_score', ''),
-        'test_score' : metrics.get('test_score', ''),
-        'MAE'        : metrics.get('MAE', ''),
+        'timestamp'  : datetime.now().strftime('%Y-%m-%d %H:%M'),
+        'model_type' : model_type,
+        'n_features' : n_features,
+        'train_score': round(train_score, 4),
+        'test_score' : round(test_score, 4),
         'notes'      : notes,
     }
     exp_file = REPORT_PATH / 'experiments.csv'
-    pd.DataFrame([row]).to_csv(exp_file, mode='a',
-        header=not exp_file.exists(), index=False)
+    # mode='a' = append (tambah baris baru, tidak overwrite)
+    # header = tulis header hanya kalau file belum ada
+    pd.DataFrame([row]).to_csv(exp_file, mode='a', header=not exp_file.exists(), index=False)
+    print(f"✓ Dicatat: {model_type} | test={test_score:.4f} | {notes}")
 
-# Contoh pemakaian
+
+# ── Panggil setelah setiap run model ──────────────────────────
 log_experiment(
-    params  = {'model_type': 'LightGBM', 'n_features': 45},
-    metrics = {'train_score': 0.92, 'test_score': 0.84, 'MAE': 45000},
-    notes   = 'Hapus fitur lag30 — hasil lebih baik dari run sebelumnya'
+    model_type  = 'LightGBM',
+    n_features  = 45,
+    train_score = 0.92,
+    test_score  = 0.84,
+    notes       = 'Hapus fitur lag30 — test score naik dari 0.81'
 )</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
   </div>
 
   <div class="section">
-    <div class="section-title">Konvensi kolom notes</div>
+    <div class="section-title">Kolom notes — kunci dari experiment tracking</div>
+    <div class="callout warn"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Notes yang tidak informatif sama saja tidak catat</div><div class="c-text">Kolom notes harus menjawab: <strong>"apa yang kamu ubah dari run sebelumnya?"</strong> Bukan deskripsi model yang sudah ada di kolom lain.</div></div></div>
     <div class="card">
     <div class="two-col">
-      <div><div class="col-label">✅ Berguna</div><pre>tambah fitur rolling_30d_mean
-hapus outlier > p99
+      <div><div class="col-label">✅ Notes yang berguna</div><pre>tambah fitur rolling_30d_mean
+hapus outlier > p99 di kolom nilai
 ganti RF → LightGBM
-filter data &lt; 2023 (anomali)</pre></div>
-      <div><div class="col-label">❌ Tidak berguna</div><pre>coba lagi
+filter data sebelum 2023 (anomali COVID)
+naikkan max_depth 5 → 7
+pakai SMOTE untuk handle imbalanced</pre></div>
+      <div><div class="col-label">❌ Notes yang tidak berguna</div><pre>coba lagi
 update
 model baru
-test 3</pre></div>
+test 3
+fixed
+coba feature baru</pre></div>
     </div></div>
-    <div class="callout tip"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Baca experiments.csv sebelum mulai eksperimen baru</div><div class="c-text"><pre>df_exp = pd.read_csv(REPORT_PATH / 'experiments.csv')
-print(df_exp.sort_values('test_score', ascending=False).head(5).to_string())</pre></div></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Baca hasil sebelum mulai eksperimen baru</div>
+    <div class="callout tip"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Selalu baca experiments.csv dulu — jangan coba hal yang sudah pernah dicoba</div><div class="c-text">Sebelum run model baru, lihat dulu apa yang sudah dicoba dan hasilnya apa. Ini yang mencegah kamu mengulang eksperimen yang sama.</div></div></div>
+    <div class="code-wrap"><pre>df_exp = pd.read_csv(REPORT_PATH / 'experiments.csv')
+
+# Lihat 5 run terbaik berdasarkan test score
+print(df_exp.sort_values('test_score', ascending=False).head(5).to_string())
+
+# Lihat semua run — urutkan dari terbaru
+print(df_exp.sort_values('timestamp', ascending=False).to_string())</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
   </div>
 </div>
 
@@ -2205,50 +2258,128 @@ p-value: 0.003</pre></div>
 
 <!-- ═══════════════════════════════════════════════ ERROR LOG -->
 <div id="page-errlog" class="page">
-  <div class="ph"><div class="ph-title">Error Handling &amp; Logging</div><div class="ph-desc">Pipeline yang gagal diam-diam lebih berbahaya dari pipeline yang crash dengan jelas.</div></div>
+  <div class="ph"><div class="ph-title">Error Handling &amp; Logging</div><div class="ph-desc">Pipeline yang gagal diam-diam lebih berbahaya dari pipeline yang crash dengan jelas. Kalau ada yang salah, kamu harus tahu — kapan, di mana, dan kenapa.</div></div>
 
   <div class="section">
-    <div class="section-title">Setup logging standar</div>
+    <div class="section-title">Logging itu apa?</div>
+    <div class="card">
+      <div class="card-title">Analogi: kotak hitam pesawat</div>
+      <div class="card-desc">Kotak hitam pesawat merekam semua yang terjadi — kapan mesin dinyalakan, kapan ketinggian berubah, kapan ada peringatan. Kalau terjadi sesuatu, investigator bisa putar ulang dan tahu persis apa yang terjadi.<br><br>
+      Logging di pipeline berfungsi sama: mencatat setiap langkah penting sehingga kalau pipeline gagal jam 3 pagi saat dijalankan otomatis oleh DE, kamu bisa buka file log dan langsung tahu masalahnya di mana.</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Kenapa tidak cukup pakai print()?</div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title" style="color:var(--red)">❌ print() — kurang untuk pipeline</div>
+        <ul style="margin:8px 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:5px">
+          <li>Tidak ada timestamp — tidak tahu kapan terjadi</li>
+          <li>Hilang begitu terminal ditutup</li>
+          <li>Tidak bisa dibedakan mana warning, mana info biasa</li>
+          <li>Tidak bisa disimpan ke file secara otomatis</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--green)">✅ logging — lebih tepat untuk pipeline</div>
+        <ul style="margin:8px 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:5px">
+          <li>Ada timestamp otomatis di setiap baris</li>
+          <li>Bisa disimpan ke file <code>.log</code> sekaligus tampil di terminal</li>
+          <li>Ada level: INFO, WARNING, ERROR — mudah difilter</li>
+          <li>Kalau ada error, langsung terlihat di level mana dan pesannya apa</li>
+        </ul>
+      </div>
+    </div>
+    <div class="code-wrap" style="margin-top:10px"><pre># Contoh output logging — lebih informatif dari print
+2025-03-15 14:30:01 | INFO    | Load data selesai: 125,430 baris
+2025-03-15 14:30:45 | INFO    | Cleaning selesai: 123,210 baris (1.8% dihapus)
+2025-03-15 14:31:02 | WARNING | Missing value di kolom 'region': 8.2% — diimputasi modus
+2025-03-15 14:35:18 | ERROR   | Upload ke BQ gagal: 403 Permission denied</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Setup logging — cukup tempel di bagian atas file .py atau notebook</div>
     <div class="code-wrap"><pre>import logging
 from pathlib import Path
 
-def setup_logger(name: str, log_file: Path = None) -> logging.Logger:
-    """Setup logger dengan output ke console dan opsional ke file."""
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.INFO)
-    fmt = logging.Formatter('%(asctime)s | %(levelname)s | %(name)s | %(message)s')
-    ch = logging.StreamHandler()
-    ch.setFormatter(fmt)
-    logger.addHandler(ch)
-    if log_file:
-        log_file.parent.mkdir(parents=True, exist_ok=True)
-        fh = logging.FileHandler(log_file)
-        fh.setFormatter(fmt)
-        logger.addHandler(fh)
-    return logger
+# Buat folder outputs/reports/ kalau belum ada
+Path('outputs/reports').mkdir(parents=True, exist_ok=True)
 
-logger = setup_logger(__name__, log_file=Path('outputs/reports/pipeline.log'))</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+# Setup — cukup tulis sekali di atas file
+logging.basicConfig(
+    level   = logging.INFO,
+    format  = '%(asctime)s | %(levelname)-8s | %(message)s',
+    datefmt = '%Y-%m-%d %H:%M:%S',
+    handlers = [
+        logging.StreamHandler(),                                    # tampil di terminal
+        logging.FileHandler('outputs/reports/pipeline.log'),        # simpan ke file
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# Sekarang tinggal pakai:
+logger.info("Pipeline dimulai")
+logger.warning("Ada sesuatu yang tidak normal tapi pipeline tetap jalan")
+logger.error("Ini error — sesuatu gagal")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
   </div>
 
   <div class="section">
-    <div class="section-title">Level logging yang tepat</div>
-    <div class="code-wrap"><pre>logger.debug(...)    # detail teknis — nonaktif di produksi
-logger.info(...)     # status normal: "Step 1 selesai, 50k baris"
-logger.warning(...)  # tidak normal tapi pipeline tetap jalan
-logger.error(...)    # operasi gagal — selalu diikuti raise</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    <div class="section-title">Level logging — mana yang dipakai kapan?</div>
+    <table>
+      <tr><th>Level</th><th>Kapan dipakai</th><th>Contoh pesan</th></tr>
+      <tr><td><code>logger.info()</code></td><td>Status normal — setiap tahap selesai</td><td><code>"Load data selesai: 50,000 baris"</code></td></tr>
+      <tr><td><code>logger.warning()</code></td><td>Tidak normal tapi pipeline masih bisa jalan</td><td><code>"Missing value 15% di kolom umur — diimputasi median"</code></td></tr>
+      <tr><td><code>logger.error()</code></td><td>Sesuatu gagal — biasanya diikuti raise atau stop</td><td><code>"Query BQ gagal: timeout setelah 300 detik"</code></td></tr>
+    </table>
+    <div class="code-wrap" style="margin-top:10px"><pre># Contoh penggunaan di pipeline
+logger.info(f"Load data selesai: {len(df_raw):,} baris dari BQ")
+
+missing_pct = df['region'].isnull().mean() * 100
+if missing_pct > 10:
+    logger.warning(f"Missing value tinggi di 'region': {missing_pct:.1f}% — cek sumber data")
+
+logger.info(f"Cleaning selesai: {len(df_raw):,} → {len(df_clean):,} baris")
+logger.info(f"Training selesai | AUC train: {train_auc:.4f} | AUC test: {test_auc:.4f}")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
   </div>
 
   <div class="section">
-    <div class="section-title">Pola error handling</div>
-    <div class="callout dont"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Jangan — menyembunyikan error</div><div class="c-text"><pre>try:
+    <div class="section-title">try / except — tangkap error dengan benar</div>
+    <div class="card">
+      <div class="card-title">try / except itu apa?</div>
+      <div class="card-desc"><code>try</code> = "coba jalankan kode ini." <code>except</code> = "kalau gagal, lakukan ini sebagai gantinya." Tanpa <code>try/except</code>, kalau ada error Python langsung berhenti tanpa pesan yang jelas. Dengan <code>try/except</code>, kamu bisa tangkap errornya, catat ke log, lalu putuskan: lanjut atau berhenti.</div>
+    </div>
+
+    <div class="callout dont" style="margin-top:10px">
+      <div class="c-icon">❌</div>
+      <div class="c-body">
+        <div class="c-label">Jangan — menelan error diam-diam</div>
+        <div class="c-text">
+          <div class="code-wrap" style="margin-top:6px"><pre>try:
     df = load_from_bq(query)
 except:
-    pass  # pipeline terus jalan dengan data kosong!</pre></div></div></div>
-    <div class="callout do"><div class="c-icon">✅</div><div class="c-body"><div class="c-label">Benar — tangkap, log, dan re-raise</div><div class="c-text"><pre>try:
+    pass   # ← pipeline terus jalan dengan df yang tidak ter-assign!
+           # kode berikutnya akan error dengan pesan yang membingungkan</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout do" style="margin-top:8px">
+      <div class="c-icon">✅</div>
+      <div class="c-body">
+        <div class="c-label">Benar — tangkap, catat, dan hentikan dengan jelas</div>
+        <div class="c-text">
+          <div class="code-wrap" style="margin-top:6px"><pre>try:
     df = load_from_bq(query)
+    logger.info(f"BQ query berhasil: {len(df):,} baris")
 except Exception as e:
     logger.error(f"BQ query gagal: {e}")
-    raise  # pipeline berhenti dengan jelas</pre></div></div></div>
+    raise   # ← berhenti di sini dengan pesan yang jelas, bukan lanjut dengan data kosong</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout tip" style="margin-top:8px"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Kapan tidak perlu try/except?</div><div class="c-text">Di notebook untuk analisis biasa, tidak perlu. try/except mulai dibutuhkan saat kode masuk ke <code>src/</code> atau <code>pipeline/</code> yang akan dijalankan otomatis oleh DE — di mana tidak ada orang yang lihat kalau ada error.</div></div></div>
   </div>
 </div>
 
@@ -2311,12 +2442,24 @@ python -c "import pandas; import sklearn; print('OK')"</pre><button class="copy-
 
 <!-- ═══════════════════════════════════════════════ DASHBOARD -->
 <div id="page-dashboard" class="page">
-  <div class="ph"><div class="ph-title">Dashboard / Data Product Readiness</div><div class="ph-desc">Data untuk dashboard punya standar berbeda. Format, naming, dan freshness harus sesuai BI tools klien.</div></div>
+  <div class="ph"><div class="ph-title">Dashboard / Data Product Readiness</div><div class="ph-desc">Data untuk dashboard punya standar yang berbeda dari data untuk analisis. Format, naming, granularity, dan kelengkapan kolom harus sesuai kebutuhan BI tools dan pengguna bisnis — bukan standar DS.</div></div>
+
+  <div class="section">
+    <div class="section-title">Perbedaan data untuk analisis vs data untuk dashboard</div>
+    <table>
+      <tr><th>Aspek</th><th>Data untuk analisis (notebook)</th><th>Data untuk dashboard</th></tr>
+      <tr><td>Nama kolom</td><td>Teknis: <code>pred_proba</code>, <code>ts_created</code></td><td>Bisnis: <code>Skor Risiko</code>, <code>Tanggal Order</code></td></tr>
+      <tr><td>Format tanggal</td><td>Bebas — pandas bisa handle banyak format</td><td>Wajib <code>YYYY-MM-DD</code> supaya BI tools tidak salah parse</td></tr>
+      <tr><td>Missing value</td><td>Boleh ada — tujuannya memang untuk dianalisis</td><td>Tidak boleh di kolom kunci — muncul blank di dashboard</td></tr>
+      <tr><td>Granularity</td><td>Level transaksi atau event — detail penuh</td><td>Harus sesuai kebutuhan viz (per user, per hari, per region)</td></tr>
+      <tr><td>Ukuran file</td><td>Bisa besar — analisis lokal</td><td>Seramping mungkin — BI tools jadi lambat kalau besar</td></tr>
+    </table>
+  </div>
 
   <div class="section">
     <div class="section-title">Format standar</div>
     <div class="card"><div class="card-title">Format tanggal — selalu YYYY-MM-DD</div>
-    <div class="callout dont" style="margin-top:8px"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Jangan</div><div class="c-text">Format <code>15/03/2025</code> atau <code>Mar-25</code> menyebabkan masalah parsing di BI tools.</div></div></div>
+    <div class="callout dont" style="margin-top:8px"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Jangan</div><div class="c-text">Format <code>15/03/2025</code> atau <code>Mar-25</code> menyebabkan masalah parsing di BI tools — tanggal bisa terbaca terbalik atau jadi string.</div></div></div>
     <div class="code-wrap"><pre>for col in df_out.select_dtypes('datetime').columns:
     df_out[col] = df_out[col].dt.strftime('%Y-%m-%d')</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
     <div class="card"><div class="card-title">Nama kolom — sesuaikan dengan kebutuhan pengguna bisnis</div>
@@ -2339,6 +2482,95 @@ df_dashboard = df_result.rename(columns=column_mapping)</pre><button class="copy
     for col in required_cols:
         assert df[col].isnull().sum() == 0, f"Missing value di {col}"
     print(f"✓ Dashboard valid: {len(df):,} baris")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Kesalahan umum yang sering terjadi</div>
+
+    <div class="card" style="margin-bottom:8px">
+      <div class="card-title">❌ Angka di dashboard tidak sama dengan yang di deck / laporan</div>
+      <div class="card-desc" style="margin-bottom:8px">DS upload data dashboard dari run berbeda dengan yang dipakai saat presentasi — periode berbeda, filter berbeda, atau definisi metric berbeda. Klien langsung tanya kenapa angkanya beda.</div>
+      <div class="code-wrap"><pre># Pastikan filter dan definisi metric sama persis dengan yang di presentasi
+# Catat di README atau komentar notebook:
+# "Data untuk dashboard: periode Jan–Mar 2025, filter region = Jawa, churn window = 90 hari"
+
+assert df_dashboard['tanggal'].min() == '2025-01-01', "Periode tidak sesuai — cek filter tanggal"
+assert df_dashboard['tanggal'].max() == '2025-03-31', "Periode tidak sesuai — cek filter tanggal"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <div class="card" style="margin-bottom:8px">
+      <div class="card-title">❌ Tipe kolom angka tersimpan sebagai string di BI tools</div>
+      <div class="card-desc" style="margin-bottom:8px">Terjadi kalau kolom angka ada campuran nilai dan teks (<code>"N/A"</code>, <code>"-"</code>, spasi) sehingga pandas simpan sebagai <code>object</code>. Di Looker atau Tableau, kolom ini tidak bisa di-sum, di-average, atau di-sort dengan benar.</div>
+      <div class="code-wrap"><pre># Cek tipe semua kolom sebelum upload
+print(df_dashboard.dtypes)
+
+# Kolom yang seharusnya angka tapi tipenya object → perbaiki
+df_dashboard['revenue'] = pd.to_numeric(df_dashboard['revenue'], errors='coerce')
+df_dashboard['skor_risiko'] = df_dashboard['skor_risiko'].astype(float)
+
+# Pastikan tidak ada object yang seharusnya numerik
+num_cols = ['revenue', 'skor_risiko', 'jumlah_transaksi']
+for col in num_cols:
+    assert df_dashboard[col].dtype in ['float64', 'int64'], \
+        f"Kolom {col} masih bertipe {df_dashboard[col].dtype} — harus numerik"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <div class="card" style="margin-bottom:8px">
+      <div class="card-title">❌ Granularity salah — duplikat per entitas yang seharusnya unik</div>
+      <div class="card-desc" style="margin-bottom:8px">Dashboard minta "satu baris per pelanggan" tapi data masih level transaksi — satu pelanggan bisa muncul 10 baris. Semua metric di dashboard jadi double-count.</div>
+      <div class="code-wrap"><pre># Cek granularity sebelum upload
+# Kalau dashboard harusnya 1 baris per user:
+assert df_dashboard['user_id'].is_unique, \
+    f"Ada duplikat user_id: {df_dashboard['user_id'].duplicated().sum()} baris ganda"
+
+# Kalau harusnya 1 baris per (user, bulan):
+key_cols = ['user_id', 'bulan']
+assert not df_dashboard.duplicated(subset=key_cols).any(), \
+    f"Ada duplikat pada kombinasi {key_cols}"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <div class="card" style="margin-bottom:8px">
+      <div class="card-title">❌ Kolom untuk filter di dashboard tidak ada di data</div>
+      <div class="card-desc" style="margin-bottom:8px">DE atau klien ingin filter by region, channel, atau segment — tapi kolom itu tidak di-include di output. Harus run ulang dan re-upload.</div>
+      <div class="code-wrap"><pre># Konfirmasi dulu ke klien/DE: filter apa yang akan ada di dashboard?
+# Lalu cek semua kolom filter ada di output
+
+filter_cols_required = ['region', 'channel', 'segment', 'bulan']   # sesuaikan
+missing_filters = [c for c in filter_cols_required if c not in df_dashboard.columns]
+assert not missing_filters, f"Kolom filter tidak ada di output: {missing_filters}"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <div class="card" style="margin-bottom:8px">
+      <div class="card-title">❌ Data terlalu besar — dashboard jadi lambat</div>
+      <div class="card-desc" style="margin-bottom:8px">Upload 5 juta baris data transaksi mentah ke GCS untuk dashboard yang hanya menampilkan summary per bulan. BI tools harus aggregate jutaan baris setiap kali dashboard dibuka — loading bisa menit-menit.</div>
+      <div class="code-wrap"><pre># Agregasi di Python sebelum upload — jangan bebankan ke BI tools
+df_monthly = (df_transaksi
+    .groupby(['bulan', 'region', 'segment'])
+    .agg(
+        total_revenue    = ('revenue', 'sum'),
+        jumlah_transaksi = ('trx_id', 'nunique'),
+        jumlah_pelanggan = ('user_id', 'nunique'),
+    )
+    .reset_index()
+)
+
+print(f"Sebelum agregasi: {len(df_transaksi):,} baris")
+print(f"Setelah agregasi : {len(df_monthly):,} baris")  # jauh lebih kecil</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">❌ Tidak test di BI tools sebelum delivery</div>
+      <div class="card-desc">Data kelihatan bagus di pandas tapi begitu dibuka di Looker, Tableau, atau Metabase — ada kolom yang tidak muncul, tanggal tidak bisa di-filter, atau viz tidak bisa di-build. Temuan ini muncul pas klien buka dashboard untuk pertama kali.</div>
+      <div style="margin-top:10px;padding:10px 14px;background:var(--green-bg);border:1px solid var(--green-bd);border-radius:var(--r);font-size:13px;color:var(--green)">
+        <strong>Checklist sebelum declare selesai:</strong>
+        <ul style="margin:6px 0 0 16px;padding:0;display:grid;gap:4px;color:var(--text2)">
+          <li>Buka dashboard di BI tools yang sama dengan klien — bukan hanya preview lokal</li>
+          <li>Coba semua filter yang akan dipakai klien</li>
+          <li>Cek semua angka match dengan laporan / presentasi</li>
+          <li>Konfirmasi dengan DE bahwa data sudah terbaca dengan benar dari BQ / GCS</li>
+        </ul>
+      </div>
+    </div>
   </div>
 </div>
 
