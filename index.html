@@ -1865,48 +1865,223 @@ outputs/
 
 <!-- ═══════════════════════════════════════════════ TESTING -->
 <div id="page-testing" class="page">
-  <div class="ph"><div class="ph-title">Testing Ringan</div><div class="ph-desc">Tidak perlu framework berat. Cukup assertion sederhana di notebook dan smoke test di <code>src/</code>.</div></div>
+  <div class="ph"><div class="ph-title">Testing Ringan</div><div class="ph-desc">Testing bukan hanya untuk software engineer. Dua hal sederhana — assertion di notebook dan smoke test di src/ — sudah cukup untuk menangkap sebagian besar masalah sebelum ketahuan di depan klien.</div></div>
 
   <div class="section">
-    <div class="section-title">Assertion di notebook</div>
-    <div class="callout do"><div class="c-icon">✅</div><div class="c-body"><div class="c-label">Gunakan assert setelah setiap tahap kritis</div></div></div>
-    <div class="code-wrap"><pre>## Setelah load data
-assert len(df_raw) > 0, "Query BQ mengembalikan 0 baris"
-assert 'user_id' in df_raw.columns, "Kolom user_id tidak ada"
-
-## Setelah cleaning
-assert df_clean.isnull().sum().sum() == 0, "Masih ada missing value setelah cleaning"
-assert len(df_clean) > 0, "DataFrame kosong setelah cleaning"
-
-## Setelah export
-assert output_file.exists(), f"File output tidak terbuat: {output_file}"
-assert output_file.stat().st_size > 0, "File output kosong"
-print("✓ Semua assertion passed")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    <div class="section-title">Testing itu apa dan kenapa perlu?</div>
+    <div class="card">
+      <div class="card-title">Analogi sederhana</div>
+      <div class="card-desc">Testing = <strong>cek sendiri sebelum orang lain yang cek.</strong><br><br>
+      Bayangkan kamu masak, lalu mencicipi sebelum disajikan ke tamu. Kalau asinnya kurang, kamu tahu sekarang — bukan pas tamu sudah makan. Assertion dan smoke test adalah cara kamu "mencicipi" notebook sebelum dijalankan oleh orang lain atau dipresentasi ke klien.</div>
+    </div>
+    <div class="two-col" style="margin-top:10px">
+      <div class="card">
+        <div class="card-title">Assertion — untuk notebook</div>
+        <div class="card-desc">Baris kode yang mengecek satu kondisi. Kalau kondisi terpenuhi → kode jalan terus, tidak ada output. Kalau tidak terpenuhi → kode berhenti dan muncul pesan error yang jelas.<br><br>Dipakai untuk: <em>cek hasil tiap tahap</em> (setelah load data, setelah cleaning, setelah export).</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Smoke test — untuk src/</div>
+        <div class="card-desc">Test paling dasar: <em>apakah fungsinya bisa dipanggil tanpa error?</em><br><br>Seperti menyalakan mesin sebelum jalan — kalau mesinnya tidak nyala, tidak perlu cek hal lain. Bukan untuk cek kebenaran logika bisnis, tapi untuk cek: tidak crash, tipe output benar, hasil tidak kosong.</div>
+      </div>
+    </div>
   </div>
 
   <div class="section">
-    <div class="section-title">Smoke test untuk src/</div>
-    <div class="code-wrap"><pre># tests/test_smoke.py
-import pandas as pd, sys
+    <div class="section-title">Assertion — cara pakai</div>
+    <div class="card">
+      <div class="card-title">Formatnya sederhana</div>
+      <div class="code-wrap" style="margin-top:8px"><pre>assert [kondisi yang harus TRUE], "pesan kalau kondisi FALSE"
+
+# Contoh:
+assert len(df) > 0, "DataFrame kosong!"
+#       ↑                ↑
+#  kondisi yang dicek    pesan error yang muncul kalau salah</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">
+        <div style="padding:10px;background:var(--green-bg);border-radius:var(--r);border:1px solid var(--green-bd)">
+          <div style="font-weight:600;color:var(--green);margin-bottom:4px">✅ Kondisi TRUE → tidak ada yang terjadi</div>
+          <code style="font-size:11px">assert 1000 > 0, "kosong"<br># → kode lanjut normal</code>
+        </div>
+        <div style="padding:10px;background:var(--red-bg);border-radius:var(--r);border:1px solid var(--red-bd)">
+          <div style="font-weight:600;color:var(--red);margin-bottom:4px">❌ Kondisi FALSE → kode berhenti</div>
+          <code style="font-size:11px">assert 0 > 0, "kosong"<br># → AssertionError: kosong</code>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:12px">
+      <div class="section-title" style="font-size:10px;margin-bottom:10px">Assertion wajib di tiap tahap</div>
+      <div class="card" style="margin-bottom:8px">
+        <div class="card-title">📥 Setelah load data</div>
+        <div class="code-wrap" style="margin-top:8px"><pre>df_raw = bq_client.query(query).to_dataframe()
+
+assert len(df_raw) > 0,           "Query BQ mengembalikan 0 baris — cek query atau periode tanggal"
+assert 'user_id' in df_raw.columns, "Kolom user_id tidak ada — cek nama kolom di BQ"
+assert df_raw['tanggal'].dtype == 'datetime64[ns]', "Kolom tanggal bukan tipe datetime"
+
+print(f"✓ Data loaded: {len(df_raw):,} baris, {df_raw.shape[1]} kolom")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      </div>
+      <div class="card" style="margin-bottom:8px">
+        <div class="card-title">🧹 Setelah cleaning</div>
+        <div class="code-wrap" style="margin-top:8px"><pre>df_clean = clean_data(df_raw)
+
+assert len(df_clean) > 0,                          "DataFrame kosong setelah cleaning"
+assert df_clean.isnull().sum().sum() == 0,          "Masih ada missing value setelah cleaning"
+assert len(df_clean) >= len(df_raw) * 0.7,         "Terlalu banyak baris terhapus (>30%) — cek logika cleaning"
+
+print(f"✓ Cleaning selesai: {len(df_raw):,} → {len(df_clean):,} baris")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      </div>
+      <div class="card" style="margin-bottom:8px">
+        <div class="card-title">⚙️ Setelah feature engineering</div>
+        <div class="code-wrap" style="margin-top:8px"><pre>df_feat = build_features(df_clean, cfg)
+
+assert set(feature_cols).issubset(df_feat.columns), "Ada feature yang hilang setelah FE"
+assert df_feat[feature_cols].isnull().sum().sum() == 0, "Ada NaN di feature — model tidak bisa jalan"
+assert len(df_feat) == len(df_clean),               "Jumlah baris berubah setelah FE — cek merge/join"
+
+print(f"✓ Features ready: {len(feature_cols)} feature, {len(df_feat):,} baris")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📤 Setelah export / simpan output</div>
+        <div class="code-wrap" style="margin-top:8px"><pre>output_file = OUTPUT_PATH / f'predictions_{run_id}.csv'
+df_result.to_csv(output_file, index=False)
+
+assert output_file.exists(),           f"File tidak terbuat: {output_file}"
+assert output_file.stat().st_size > 0, "File terbuat tapi kosong"
+assert len(df_result) > 0,             "DataFrame hasil prediksi kosong"
+
+# Untuk model — cek range prediksi masuk akal
+assert df_result['pred_proba'].between(0, 1).all(), "Probabilitas di luar rentang 0–1"
+
+print(f"✓ Output tersimpan: {output_file.name}")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Smoke test — untuk fungsi di src/</div>
+    <div class="callout tip"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Hanya perlu kalau ada file .py di src/ atau pipeline/</div><div class="c-text">Kalau semua kode masih di notebook, cukup pakai assertion. Smoke test mulai dibutuhkan saat ada fungsi yang dipindah ke <code>src/</code> supaya bisa dipakai ulang atau dijadwalkan DE.</div></div></div>
+    <div class="card" style="margin-top:10px">
+      <div class="card-title">Cara buat smoke test paling sederhana</div>
+      <div class="card-desc" style="margin-bottom:10px">Buat file <code>tests/test_smoke.py</code>. Isinya: panggil fungsi dengan data dummy, cek outputnya tidak error dan bentuknya benar.</div>
+      <div class="code-wrap"><pre># tests/test_smoke.py
+import pandas as pd
+import sys
 from pathlib import Path
+
+# Supaya Python bisa temukan folder src/
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.features import build_features
 
-def test_build_features_returns_dataframe():
-    """build_features harus mengembalikan DataFrame, tidak boleh error."""
+def test_build_features():
+    """Cek: build_features bisa dipanggil dan mengembalikan DataFrame."""
+
+    # Buat data dummy — tidak perlu data asli, cukup strukturnya benar
     df_dummy = pd.DataFrame({
         'user_id': [1, 2, 3],
         'tanggal': pd.date_range('2025-01-01', periods=3),
-        'nilai': [100, 200, 300],
+        'nilai'  : [100, 200, 300],
     })
-    result = build_features(df_dummy, {})
-    assert isinstance(result, pd.DataFrame)
-    assert len(result) > 0
+
+    result = build_features(df_dummy, cfg={})
+
+    assert isinstance(result, pd.DataFrame), "Output bukan DataFrame"
+    assert len(result) > 0,                  "Output kosong"
     print("✓ test_build_features passed")
 
+# Jalankan langsung dari terminal: python tests/test_smoke.py
 if __name__ == '__main__':
-    test_build_features_returns_dataframe()
-    print("Semua smoke test passed")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    test_build_features()
+    print("Semua smoke test passed ✓")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+    <div class="card" style="margin-top:10px">
+      <div class="card-title">Cara jalankan</div>
+      <div class="code-wrap" style="margin-top:8px"><pre># Opsi 1 — langsung dari terminal (paling simple)
+python tests/test_smoke.py
+
+# Opsi 2 — pakai pytest kalau sudah install
+pip install pytest
+pytest tests/test_smoke.py -v</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Kesalahan umum DS/DA yang bisa dicegah dengan assertion</div>
+    <div class="callout dont"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Ini sering tidak ketahuan sampai dipresentasi atau pipeline sudah jalan</div><div class="c-text">Semua kasus di bawah pernah terjadi di dunia nyata. Satu assertion sederhana bisa mencegah masing-masing.</div></div></div>
+
+    <div class="card" style="margin-bottom:8px">
+      <div class="card-title">Filter terlalu ketat — data jadi 0 baris tapi tidak ada error</div>
+      <div class="card-desc" style="margin-bottom:8px">Kode jalan mulus, notebook selesai, tapi outputnya kosong karena filter membuang semua data. Tanpa assertion, ini tidak ketahuan.</div>
+      <div class="code-wrap"><pre>df_filtered = df[df['region'] == 'Jawa Barat']
+
+# Tanpa ini, kode tetap jalan walau df_filtered kosong
+assert len(df_filtered) > 0, \
+    f"Filter region menghasilkan 0 baris — cek nilai unik: {df['region'].unique()}"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <div class="card" style="margin-bottom:8px">
+      <div class="card-title">Baris berlipat ganda setelah join / merge</div>
+      <div class="card-desc" style="margin-bottom:8px">Merge tanpa cek bisa menghasilkan duplikat kalau key-nya tidak unik di salah satu tabel. Modelnya jalan, tapi datanya salah.</div>
+      <div class="code-wrap"><pre>df_merged = df_transaksi.merge(df_profil, on='user_id', how='left')
+
+assert len(df_merged) == len(df_transaksi), \
+    f"Baris bertambah setelah merge: {len(df_transaksi):,} → {len(df_merged):,}. " \
+    f"Cek apakah user_id di df_profil unik: {df_profil['user_id'].is_unique}"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <div class="card" style="margin-bottom:8px">
+      <div class="card-title">NaN lolos masuk ke model tanpa ketahuan</div>
+      <div class="card-desc" style="margin-bottom:8px">Beberapa model (scikit-learn) langsung error kalau ada NaN. Tapi beberapa lain (LightGBM) diam-diam handle sendiri — hasilnya beda dari yang diharapkan tanpa peringatan.</div>
+      <div class="code-wrap"><pre>nan_per_col = df_feat[feature_cols].isnull().sum()
+cols_with_nan = nan_per_col[nan_per_col > 0]
+
+assert len(cols_with_nan) == 0, \
+    f"Ada NaN di feature sebelum masuk model:\n{cols_with_nan}"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <div class="card" style="margin-bottom:8px">
+      <div class="card-title">Tipe kolom salah — tanggal terbaca sebagai string</div>
+      <div class="card-desc" style="margin-bottom:8px">Terjadi kalau baca dari CSV atau BQ dengan schema tidak eksplisit. Semua operasi tanggal (<code>dt.month</code>, <code>resample</code>) akan error atau diam-diam salah.</div>
+      <div class="code-wrap"><pre>assert pd.api.types.is_datetime64_any_dtype(df['tanggal']), \
+    f"Kolom 'tanggal' bukan datetime, tipenya: {df['tanggal'].dtype}. " \
+    "Tambahkan: df['tanggal'] = pd.to_datetime(df['tanggal'])"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <div class="card" style="margin-bottom:8px">
+      <div class="card-title">Nilai di luar range yang masuk akal</div>
+      <div class="card-desc" style="margin-bottom:8px">Umur -3 tahun, probabilitas 1.5, revenue negatif ratusan juta — data seperti ini sering lolos ke output kalau tidak dicek.</div>
+      <div class="code-wrap"><pre># Cek probabilitas output model
+assert df_result['pred_proba'].between(0, 1).all(), \
+    f"Probabilitas di luar 0–1: min={df_result['pred_proba'].min():.3f}, max={df_result['pred_proba'].max():.3f}"
+
+# Cek nilai bisnis yang tidak masuk akal
+assert (df['umur'] >= 0).all() and (df['umur'] <= 100).all(), \
+    f"Ada nilai umur tidak wajar: {df['umur'].describe()}"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <div class="card" style="margin-bottom:8px">
+      <div class="card-title">Model prediksi satu nilai saja untuk semua baris</div>
+      <div class="card-desc" style="margin-bottom:8px">Terjadi kalau ada bug di feature engineering atau target encoding yang bocor. Model "belajar" tapi outputnya flat — semua prediksi hampir sama persis.</div>
+      <div class="code-wrap"><pre>pred_std = pd.Series(y_pred).std()
+pred_unique = pd.Series(y_pred).nunique()
+
+assert pred_std > 0.01, \
+    f"Prediksi terlalu seragam (std={pred_std:.4f}) — kemungkinan ada bug di feature atau target encoding"
+assert pred_unique > 5, \
+    f"Model hanya menghasilkan {pred_unique} nilai unik — cek data dan feature"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Output file terbuat tapi isinya cuma header</div>
+      <div class="card-desc" style="margin-bottom:8px">Kalau DataFrame kosong, <code>to_csv()</code> tetap berhasil dan terbuat file — isinya hanya baris kolom tanpa data. Tidak ada error sama sekali.</div>
+      <div class="code-wrap"><pre>df_result.to_csv(output_file, index=False)
+
+assert output_file.exists(),            f"File tidak terbuat: {output_file}"
+assert output_file.stat().st_size > 100, "File terbuat tapi kemungkinan hanya berisi header — cek df_result"
+
+# Baca ulang untuk konfirmasi isi
+df_check = pd.read_csv(output_file)
+assert len(df_check) > 0, f"File CSV kosong (0 baris data): {output_file}"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
   </div>
 </div>
 
