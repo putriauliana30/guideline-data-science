@@ -1744,7 +1744,7 @@ git log --oneline --all --graph</pre><button class="copy-btn" onclick="cp(this)"
 
 <!-- ═══════════════════════════════════════════════ DATA QUALITY -->
 <div id="page-dq" class="page">
-  <div class="ph"><div class="ph-title">Data Quality &amp; Validasi</div><div class="ph-desc">Validasi berbeda tergantung tipe data. Tentukan tipe datamu dulu.</div></div>
+  <div class="ph"><div class="ph-title">Data Quality &amp; Validasi</div><div class="ph-desc">Validasi berbeda tergantung tipe data. Tentukan tipe datamu dulu, lalu ikuti panduan per tipe.</div></div>
 
   <div class="section">
     <div class="section-title">Kenali tipe datamu</div>
@@ -1771,8 +1771,7 @@ git log --oneline --all --graph</pre><button class="copy-btn" onclick="cp(this)"
 qc = run_quality_check(df_raw, cfg['quality'])
 if not qc['row_count_ok']:
     raise ValueError(f"Data terlalu sedikit: {qc['row_count']} baris")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
-
-    <div class="callout dont"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Jangan cleaning tanpa alasan yang tercatat</div><div class="c-text"><pre># ❌ Tidak ada alasan
+    <div class="callout dont" style="margin-top:10px"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Jangan cleaning tanpa alasan yang tercatat</div><div class="c-text"><pre># ❌ Tidak ada alasan
 df_clean = df_clean[df_clean['umur'] < 100]
 
 # ✅ Alasan jelas dan bisa dilacak
@@ -1782,39 +1781,275 @@ print(f"Terhapus: {len(df) - len(df_clean)} baris")</pre></div></div></div>
   </div>
 
   <div class="section">
-    <div class="section-title">Cek khusus time series</div>
-    <div class="callout warn"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Urutan waktu krusial</div><div class="c-text">Selalu sort berdasarkan tanggal. Cek gap/tanggal yang hilang sebelum analisis atau modelling.</div></div></div>
-    <div class="code-wrap"><pre>df = df.sort_values('tanggal').reset_index(drop=True)
+    <div class="section-title">Cek &amp; penanganan per tipe data</div>
 
-# Deteksi gap
-freq     = cfg.get('date_freq', 'D')
+    <div class="tabs">
+      <button class="tab-btn active" onclick="tab('dq','cs',this)">Cross-sectional</button>
+      <button class="tab-btn" onclick="tab('dq','ts',this)">Time series</button>
+      <button class="tab-btn" onclick="tab('dq','panel',this)">Panel data</button>
+    </div>
+
+    <!-- ── Cross-sectional ── -->
+    <div id="dq-cs" class="tab-panel active">
+      <div class="section-title" style="font-size:10px;margin:12px 0 10px">Cek khusus</div>
+      <div class="code-wrap"><pre># Cek key unik (misal: satu baris per user_id)
+assert df['user_id'].is_unique, f"Ada duplikat user_id: {df['user_id'].duplicated().sum()} baris"
+
+# Ringkasan missing value per kolom
+missing = df.isnull().mean().mul(100).round(1)
+print(missing[missing > 0].sort_values(ascending=False))</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+
+      <div class="section-title" style="font-size:10px;margin:16px 0 10px">Handling missing value</div>
+      <div class="callout tip" style="margin-bottom:10px"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Tanya bisnis dulu sebelum hapus kolom — missing bisa jadi sinyal</div><div class="c-text">Kolom dengan 40% missing bukan otomatis harus dihapus. Kadang "tidak mengisi" itu sendiri punya makna bisnis — pelanggan yang tidak mengisi pendapatan mungkin punya profil berbeda dari yang mengisi. Diskusikan dengan domain expert sebelum memutuskan.</div></div></div>
+      <table>
+        <tr><th>Persentase missing</th><th>Rekomendasi</th><th>Catatan</th></tr>
+        <tr><td>&lt; 5%</td><td>Impute atau hapus baris — keduanya aman</td><td>Pilih yang paling masuk akal secara bisnis</td></tr>
+        <tr><td>5% – 20%</td><td>Impute dengan metode yang tepat</td><td>Wajib didokumentasikan alasan dan metodenya</td></tr>
+        <tr><td>&gt; 20%</td><td>Diskusikan dengan bisnis — jangan langsung hapus</td><td>Missing bisa jadi sinyal; atau tambah flag indicator</td></tr>
+        <tr><td>Kolom target / key feature</td><td>Hapus baris — jangan impute</td><td>Imputing target = bias ke model</td></tr>
+      </table>
+      <div class="code-wrap" style="margin-top:10px"><pre># Opsi 1 — Impute sederhana
+df['umur'].fillna(df['umur'].median(), inplace=True)          # numerik → median
+df['region'].fillna(df['region'].mode()[0], inplace=True)     # kategori → modus
+df['region'].fillna('Unknown', inplace=True)                  # atau buat kategori baru
+
+# Opsi 2 — Tambah missing indicator + tetap pakai kolom (bisnis minta kolom dipertahankan)
+# Missing indicator = feature baru yang bilang "apakah nilai ini aslinya kosong?"
+df['pendapatan_missing'] = df['pendapatan'].isnull().astype(int)
+df['pendapatan'] = df['pendapatan'].fillna(df['pendapatan'].median())
+# → model bisa "belajar" bahwa orang yang tidak mengisi punya pola berbeda
+
+# Opsi 3 — KNN imputation (lebih akurat untuk missing tinggi)
+from sklearn.impute import KNNImputer
+imputer = KNNImputer(n_neighbors=5)
+cols_to_impute = ['pendapatan', 'umur', 'tenure']
+df[cols_to_impute] = imputer.fit_transform(df[cols_to_impute])</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+
+      <div class="section-title" style="font-size:10px;margin:16px 0 10px">Handling outlier</div>
+      <div class="callout warn" style="margin-bottom:10px"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Jangan langsung hapus — cek dulu apakah itu error atau nilai valid</div><div class="c-text">Outlier bisa jadi nilai valid yang ekstrem (transaksi besar klien VIP) atau error input (umur 999). Konfirmasi ke domain expert atau klien sebelum memutuskan.</div></div></div>
+      <div class="code-wrap"><pre>import numpy as np
+
+col = 'revenue'
+Q1, Q3 = df[col].quantile([0.25, 0.75])
+IQR = Q3 - Q1
+batas_bawah, batas_atas = Q1 - 1.5*IQR, Q3 + 1.5*IQR
+
+outliers = df[(df[col] < batas_bawah) | (df[col] > batas_atas)]
+print(f"Outlier: {len(outliers):,} baris ({len(outliers)/len(df)*100:.1f}%)")
+
+# Opsi 1 — Hapus (hanya kalau jelas error, sudah konfirmasi klien)
+df_clean = df[df[col].between(batas_bawah, batas_atas)].copy()
+
+# Opsi 2 — Winsorize / cap (pertahankan baris, batasi nilainya)
+df[col] = df[col].clip(lower=batas_bawah, upper=batas_atas)
+
+# Opsi 3 — Transformasi log (pertahankan semua, kurangi dominasi ekstrem)
+df['log_revenue'] = np.log1p(df['revenue'])   # log1p aman untuk nilai 0
+
+# Opsi 4 — Biarkan + tambah flag (bisnis minta data VIP tidak dihapus)
+df['is_high_value'] = (df[col] > batas_atas).astype(int)
+# → model bisa memperlakukan segmen ini secara terpisah</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <!-- ── Time series ── -->
+    <div id="dq-ts" class="tab-panel">
+      <div class="section-title" style="font-size:10px;margin:12px 0 10px">Cek khusus</div>
+      <div class="callout warn" style="margin-bottom:10px"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Urutan waktu krusial — selalu sort dulu sebelum apapun</div><div class="c-text">Operasi seperti <code>diff()</code>, <code>shift()</code>, <code>rolling()</code> sangat bergantung pada urutan baris. Data tidak ter-sort → feature salah tanpa error.</div></div></div>
+      <div class="code-wrap"><pre>df = df.sort_values('tanggal').reset_index(drop=True)
+
+# Deteksi gap — berapa periode yang hilang?
+freq     = 'MS'   # 'D'=harian, 'W'=mingguan, 'MS'=awal bulan, 'QS'=kuartal, 'AS'=tahunan
 expected = pd.date_range(df['tanggal'].min(), df['tanggal'].max(), freq=freq)
 gaps     = expected.difference(pd.DatetimeIndex(df['tanggal']))
-print(f"Gap: {len(gaps)} periode hilang dari {len(expected)} total")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
-  </div>
+print(f"Gap: {len(gaps)} periode hilang dari {len(expected)} total")
 
-  <div class="section">
-    <div class="section-title">Cek wajib — Panel data</div>
-    <div class="callout warn"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Kombinasi (entitas × waktu) harus unik</div><div class="c-text">Panel data punya dua dimensi sekaligus: entitas (user, toko) dan waktu. Duplikat pada kombinasi keduanya adalah tanda data rusak — bukan sekadar duplikat baris biasa.</div></div></div>
-    <div class="code-wrap"><pre>key_cols = ['user_id', 'bulan']   # sesuaikan dengan datamu
+# Cek gap berturut-turut (consecutive gaps)
+df['is_gap'] = ~df['tanggal'].isin(expected)
+df['gap_run'] = (df['is_gap'] != df['is_gap'].shift()).cumsum()
+max_consecutive = df[df['is_gap']].groupby('gap_run').size().max()
+print(f"Gap berturut-turut terpanjang: {max_consecutive} periode")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
 
-# 1. Cek duplikat pada kombinasi key (entitas + waktu)
+      <div class="section-title" style="font-size:10px;margin:16px 0 10px">Handling missing — termasuk gap berturut-turut</div>
+      <div class="callout tip" style="margin-bottom:10px"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Gap pendek vs gap panjang — beda penanganan</div><div class="c-text">Gap 1–2 periode bisa di-interpolasi dengan aman. Gap panjang (misal 6 bulan sistem mati) sebaiknya diberi flag dan dibiarkan — jangan tebak nilainya karena bisa merusak pola tren dan musiman.</div></div></div>
+      <table>
+        <tr><th>Situasi</th><th>Metode</th><th>Kapan pakai</th></tr>
+        <tr><td>Gap pendek (1–3 periode)</td><td><code>ffill(limit=3)</code> atau <code>interpolate()</code></td><td>Data bergerak smooth, tidak ada event besar</td></tr>
+        <tr><td>Gap panjang berturut-turut</td><td>Flag + biarkan NaN, atau segment terpisah</td><td>Sistem mati, data tidak tersedia — jangan tebak</td></tr>
+        <tr><td>Nilai memang 0 (bukan missing)</td><td>Biarkan 0, jangan di-ffill</td><td>Toko tutup di hari tertentu = revenue 0, bukan hilang</td></tr>
+      </table>
+      <div class="code-wrap" style="margin-top:10px"><pre># Reindex ke semua periode yang seharusnya ada
+df = df.set_index('tanggal').reindex(expected).rename_axis('tanggal').reset_index()
+
+# Tandai dulu mana yang asli dan mana yang di-impute
+df['nilai_imputed'] = df['nilai'].isnull()
+
+# Gap pendek — interpolasi linear (max 3 periode berturut-turut)
+df['nilai'] = df['nilai'].interpolate(method='linear', limit=3)
+
+# Gap panjang — biarkan NaN, tandai sebagai structural break
+df['structural_break'] = df['nilai'].isnull()
+
+# Forward fill dengan limit — TIDAK mengisi gap panjang
+df['nilai'] = df['nilai'].ffill(limit=2)   # hanya fill 2 periode setelah nilai terakhir</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+
+      <div class="section-title" style="font-size:10px;margin:16px 0 10px">Konversi frekuensi — data tahunan/kuartalan → bulanan</div>
+      <div class="callout tip" style="margin-bottom:10px"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Ini ekstrapolasi / distribusi — selalu dokumentasikan asumsinya</div><div class="c-text">Konversi frekuensi bukan "menemukan" data yang hilang — kita membuat asumsi tentang bagaimana nilai tahunan terdistribusi ke bulan-bulan. Asumsi ini harus dicatat dan dikonfirmasi ke bisnis.</div></div></div>
+      <div class="code-wrap"><pre># ── Data tahunan → bulanan ────────────────────────────────────
+df_tahunan = pd.DataFrame({
+    'tahun' : [2022, 2023, 2024],
+    'revenue': [1_200_000, 1_500_000, 1_800_000]
+})
+df_tahunan['tanggal'] = pd.to_datetime(df_tahunan['tahun'].astype(str) + '-01-01')
+df_tahunan = df_tahunan.set_index('tanggal')
+
+# Opsi 1 — Rata merata (asumsi: setiap bulan sama)
+df_bulanan = df_tahunan['revenue'].resample('MS').ffill() / 12
+
+# Opsi 2 — Interpolasi linear antar tahun (asumsi: perubahan gradual)
+df_bulanan = (df_tahunan['revenue']
+              .resample('MS').asfreq()        # isi dengan NaN per bulan
+              .interpolate(method='linear'))  # interpolasi antar tahun
+
+# Opsi 3 — Distribusi berdasarkan pola musiman historis
+# (pakai bobot bulan dari data historis yang lebih granular)
+bobot_bulanan = pd.Series({        # bobot tiap bulan dari data historis
+    1: 0.07, 2: 0.07, 3: 0.08, 4: 0.09, 5: 0.09, 6: 0.08,
+    7: 0.08, 8: 0.08, 9: 0.09, 10: 0.09, 11: 0.10, 12: 0.08
+})
+# Distribusikan nilai tahunan ke tiap bulan sesuai bobot
+df_bulanan = pd.DataFrame({
+    'tanggal': pd.date_range('2024-01', periods=12, freq='MS'),
+    'revenue' : 1_800_000 * bobot_bulanan.values
+})
+
+# Tandai bahwa ini hasil distribusi, bukan data asli
+df_bulanan['is_distributed'] = True
+print("⚠ Revenue bulanan ini hasil distribusi dari data tahunan — bukan data aktual")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+
+      <div class="section-title" style="font-size:10px;margin:16px 0 10px">Handling outlier</div>
+      <div class="callout tip" style="margin-bottom:10px"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Bedakan outlier event bisnis vs error input</div><div class="c-text">Spike penjualan di Lebaran = sinyal bisnis, jangan hapus. Yang perlu dihandle: nilai negatif, magnitude tidak masuk akal, atau jelas error sistem.</div></div></div>
+      <div class="code-wrap"><pre># Deteksi dengan rolling Z-score (kontekstual, bukan global)
+window = 12   # sesuaikan: 7 untuk harian, 12 untuk bulanan
+df['roll_mean'] = df['nilai'].rolling(window, center=True, min_periods=3).mean()
+df['roll_std']  = df['nilai'].rolling(window, center=True, min_periods=3).std()
+df['z_score']   = (df['nilai'] - df['roll_mean']) / df['roll_std'].replace(0, 1)
+
+# Tandai event khusus — JANGAN ikut di-winsorize
+event_dates = pd.to_datetime(['2025-04-10', '2025-12-25'])  # Lebaran, Natal
+df['is_event'] = df['tanggal'].isin(event_dates)
+
+# Winsorize hanya non-event
+mask = ~df['is_event']
+p02, p98 = df.loc[mask, 'nilai'].quantile([0.02, 0.98])
+df.loc[mask, 'nilai'] = df.loc[mask, 'nilai'].clip(p02, p98)</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <!-- ── Panel data ── -->
+    <div id="dq-panel" class="tab-panel">
+      <div class="section-title" style="font-size:10px;margin:12px 0 10px">Cek khusus</div>
+      <div class="callout warn" style="margin-bottom:10px"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Kombinasi (entitas × waktu) harus unik</div><div class="c-text">Panel data punya dua dimensi: entitas dan waktu. Duplikat pada kombinasinya adalah tanda data rusak.</div></div></div>
+      <div class="code-wrap"><pre>key_cols = ['user_id', 'bulan']
+
 n_dup = df.duplicated(subset=key_cols).sum()
-print(f"Duplikat ({', '.join(key_cols)}): {n_dup}")
-assert n_dup == 0, "Panel data tidak boleh ada duplikat pada kombinasi (entitas, waktu)"
+assert n_dup == 0, f"Duplikat pada {key_cols}: {n_dup} baris"
 
-# 2. Cek kelengkapan panel (balanced vs unbalanced)
-n_entities = df['user_id'].nunique()
-n_periods  = df['bulan'].nunique()
-n_expected = n_entities * n_periods
-print(f"Baris actual: {len(df):,} | Expected jika balanced: {n_expected:,}")
-if len(df) < n_expected:
-    print(f"⚠ Unbalanced panel: {n_expected - len(df):,} kombinasi hilang")
-
-# 3. Cek konsistensi kehadiran tiap entitas
+# Cek balanced vs unbalanced + gap per entitas
+n_entities, n_periods = df['user_id'].nunique(), df['bulan'].nunique()
+print(f"Actual: {len(df):,} | Balanced: {n_entities * n_periods:,}")
 coverage = df.groupby('user_id')['bulan'].nunique()
-print(f"Periode per user — min: {coverage.min()} | max: {coverage.max()} | median: {coverage.median()}")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
-    <div class="callout tip"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Balanced atau unbalanced — keduanya valid, tapi harus terdokumentasi</div><div class="c-text">Balanced = semua entitas hadir di semua periode. Unbalanced = ada yang absen di beberapa periode. Catat mana yang berlaku di notebook dan pertimbangkan imputasi atau masking saat modelling.</div></div></div>
+print(f"Periode per user — min: {coverage.min()} | max: {coverage.max()} | median: {coverage.median()}")
+
+# Cek gap berturut-turut per entitas
+def max_consecutive_gap(group):
+    all_periods = pd.date_range(group['bulan'].min(), group['bulan'].max(), freq='MS')
+    existing    = pd.DatetimeIndex(group['bulan'])
+    missing     = all_periods.difference(existing)
+    if len(missing) == 0: return 0
+    gaps = pd.Series(missing).diff().dt.days.fillna(0)
+    return int((gaps == 31).cumsum().value_counts().max())  # konsekutif bulanan
+
+gap_per_user = df.groupby('user_id').apply(max_consecutive_gap)
+print(f"Max gap berturut-turut per user — rata-rata: {gap_per_user.mean():.1f} bulan")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+
+      <div class="section-title" style="font-size:10px;margin:16px 0 10px">Handling missing — termasuk gap berturut-turut per entitas</div>
+      <table>
+        <tr><th>Situasi</th><th>Rekomendasi</th></tr>
+        <tr><td>Entitas absen di beberapa periode (unbalanced)</td><td>Dokumentasikan. Masking di model lebih aman dari imputasi sembarangan</td></tr>
+        <tr><td>Gap pendek (1–2 periode) per entitas</td><td>ffill atau interpolasi <strong>per entitas</strong> — bukan global</td></tr>
+        <tr><td>Gap panjang berturut-turut per entitas</td><td>Flag sebagai <code>long_gap</code>, pertimbangkan exclude entitas tersebut dari training</td></tr>
+        <tr><td>Entitas baru muncul di tengah periode</td><td>Tandai sebagai <code>new_entry</code> — bukan missing</td></tr>
+      </table>
+      <div class="code-wrap" style="margin-top:10px"><pre># Expand ke semua kombinasi (entitas × periode) dulu
+all_combos = pd.MultiIndex.from_product(
+    [df['user_id'].unique(), pd.date_range(df['bulan'].min(), df['bulan'].max(), freq='MS')],
+    names=['user_id', 'bulan']
+)
+df_full = df.set_index(['user_id','bulan']).reindex(all_combos).reset_index()
+df_full['is_missing'] = df_full['revenue'].isnull()
+
+# Hitung gap berturut-turut per entitas
+df_full = df_full.sort_values(['user_id','bulan'])
+df_full['gap_run'] = df_full.groupby('user_id')['is_missing'].transform(
+    lambda x: (x != x.shift()).cumsum()
+)
+df_full['consecutive_gap'] = df_full.groupby(['user_id','gap_run'])['is_missing'].transform('sum')
+df_full['long_gap'] = df_full['is_missing'] & (df_full['consecutive_gap'] > 2)
+
+# Impute gap pendek per entitas (max 2 periode berturut-turut)
+df_full['revenue'] = df_full.groupby('user_id')['revenue'].transform(
+    lambda x: x.ffill(limit=2)
+)
+# Gap panjang → biarkan NaN (sudah ditandai dengan long_gap=True)</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+
+      <div class="section-title" style="font-size:10px;margin:16px 0 10px">Konversi frekuensi — data tahunan/kuartalan → bulanan per entitas</div>
+      <div class="callout tip" style="margin-bottom:10px"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Lakukan per entitas — jangan interpolasi global</div><div class="c-text">Toko A dengan revenue Rp 1 M/tahun dan Toko B dengan Rp 10 M/tahun punya pola distribusi bulanan yang berbeda. Interpolasi global akan meratakan perbedaan ini.</div></div></div>
+      <div class="code-wrap"><pre># Data tahunan per entitas → bulanan
+df_tahunan = pd.DataFrame({
+    'toko_id': ['A','A','A', 'B','B','B'],
+    'tahun'  : [2022, 2023, 2024, 2022, 2023, 2024],
+    'revenue': [1_200_000, 1_500_000, 1_800_000,
+                9_000_000, 10_000_000, 12_000_000]
+})
+
+def expand_to_monthly(group):
+    """Distribusikan nilai tahunan ke 12 bulan secara merata per entitas."""
+    group = group.sort_values('tahun')
+    months = pd.date_range(
+        f"{group['tahun'].min()}-01-01",
+        f"{group['tahun'].max()}-12-01", freq='MS'
+    )
+    # Interpolasi linear antar tahun, lalu bagi 12 untuk dapat bulanan
+    yearly = group.set_index(pd.to_datetime(group['tahun'].astype(str) + '-01-01'))['revenue']
+    monthly = yearly.reindex(months).interpolate('linear') / 12
+    return monthly.reset_index().rename(columns={'index':'bulan', 0:'revenue_monthly'})
+
+df_bulanan = (df_tahunan
+    .groupby('toko_id', group_keys=False)
+    .apply(expand_to_monthly)
+    .reset_index(drop=True))
+df_bulanan['is_distributed'] = True   # tandai sebagai distribusi, bukan data aktual</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+
+      <div class="section-title" style="font-size:10px;margin:16px 0 10px">Handling outlier</div>
+      <div class="callout tip" style="margin-bottom:10px"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Cek outlier per entitas — bukan global</div><div class="c-text">Revenue Rp 500 juta bisa outlier untuk toko kecil tapi normal untuk flagship. Deteksi global akan salah menandai entitas yang memang beda skala.</div></div></div>
+      <div class="code-wrap"><pre>def flag_outliers_per_entity(df, col, entity_col, k=1.5):
+    """Tandai outlier berdasarkan IQR tiap entitas."""
+    def iqr_bounds(x):
+        Q1, Q3 = x.quantile(0.25), x.quantile(0.75)
+        IQR = Q3 - Q1
+        return pd.Series({'low': Q1 - k*IQR, 'high': Q3 + k*IQR})
+    bounds = df.groupby(entity_col)[col].apply(iqr_bounds).unstack()
+    df = df.join(bounds, on=entity_col)
+    df[f'{col}_outlier'] = (df[col] < df['low']) | (df[col] > df['high'])
+    return df.drop(columns=['low','high'])
+
+df = flag_outliers_per_entity(df, col='revenue', entity_col='toko_id')
+
+# Winsorize per entitas
+df['revenue'] = df.groupby('toko_id')['revenue'].transform(
+    lambda x: x.clip(x.quantile(0.01), x.quantile(0.99))
+)</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <div class="callout tip" style="margin-top:10px"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Balanced atau unbalanced — keduanya valid, tapi harus terdokumentasi</div><div class="c-text">Catat di notebook mana yang berlaku, berapa entitas yang unbalanced, dan pertimbangkan masking atau sample weight saat modelling jika distribusinya sangat tidak merata.</div></div></div>
+    </div>
   </div>
 </div>
 
