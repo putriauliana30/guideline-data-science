@@ -3158,58 +3158,164 @@ except Exception as e:
 
 <!-- ═══════════════════════════════════════════════ HANDOFF -->
 <div id="page-handoff" class="page">
-  <div class="ph"><div class="ph-title">Handoff ke Data Engineer</div><div class="ph-desc">Handoff yang buruk = pipeline yang gagal saat DE coba jalankan.</div></div>
+  <div class="ph"><div class="ph-title">Handoff ke Data Engineer</div><div class="ph-desc">Handoff yang buruk = pipeline yang gagal saat DE coba jalankan. DS bisa membuat model terbaik, tapi kalau DE tidak bisa menjalankannya secara otomatis — project tidak ada nilainya di production.</div></div>
+
+  <div class="section">
+    <div class="section-title">Handoff itu apa dan kenapa penting?</div>
+    <div class="card">
+      <div class="card-title">Analogi: serah terima bangunan</div>
+      <div class="card-desc">Bayangkan kontraktor yang selesai membangun gedung tapi tidak menyerahkan: kunci semua pintu, denah instalasi listrik &amp; air, manual peralatan, dan nomor kontak kalau ada masalah. Pemilik tidak bisa tinggal di gedung itu meskipun bangunannya bagus.<br><br>
+      Handoff ke DE bekerja sama. DS selesai membuat model atau pipeline — tapi DE yang akan menjalankannya setiap hari secara otomatis, tanpa DS ada di sana. Kalau DE tidak punya semua yang dibutuhkan, pipeline tidak bisa berjalan.</div>
+    </div>
+    <div class="card" style="margin-top:10px">
+      <div class="card-title">Apa yang DE lakukan dengan output kita?</div>
+      <div class="card-desc" style="margin-bottom:10px">Memahami kebutuhan DE membuat handoff lebih tepat sasaran.</div>
+      <table style="margin:0">
+        <tr><th>Yang DE lakukan</th><th>Artinya DS harus menyiapkan</th></tr>
+        <tr><td>Menjalankan pipeline tanpa bantuan DS</td><td>Kode yang bisa run end-to-end dari terminal, tanpa intervensi manual</td></tr>
+        <tr><td>Menjadwalkan otomatis (harian/mingguan/bulanan)</td><td>Frekuensi run yang jelas + estimasi waktu eksekusi</td></tr>
+        <tr><td>Memonitor kalau pipeline gagal</td><td>Kriteria sukses/gagal yang bisa dicek otomatis (jumlah baris, range nilai)</td></tr>
+        <tr><td>Tahu harus hubungi siapa kalau ada masalah bisnis</td><td>Nama &amp; kontak DS penanggung jawab</td></tr>
+        <tr><td>Memahami input dan output pipeline</td><td>Dokumentasi lengkap: tabel BQ, kolom, tipe data, frekuensi update</td></tr>
+      </table>
+    </div>
+  </div>
 
   <div class="section">
     <div class="section-title">Yang harus diserahkan ke DE</div>
-    <div class="card"><div class="card-title">1. run_pipeline.py yang sudah teruji</div>
-    <div class="os-tabs">
-      <button class="os-btn active" onclick="ostab('cmdh1','mac',this)">Mac / Linux</button>
-      <button class="os-btn" onclick="ostab('cmdh1','win',this)">Windows</button>
-    </div>
-    <div id="cmdh1-mac" class="os-panel active"><div class="code-wrap"><pre>cd /workspace/nama-project
-python pipeline/run_pipeline.py --config config/config.yaml
-# Pastikan: tidak ada error, output file terbuat, log tampil jelas</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
-    <div id="cmdh1-win" class="os-panel"><div class="code-wrap"><pre>cd C:\workspace\nama-project
-python pipeline/run_pipeline.py --config config/config.yaml
-# Pastikan: tidak ada error, output file terbuat, log tampil jelas</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
-    </div>
-    <div class="card"><div class="card-title">2. requirements.txt up-to-date</div>
-    <div class="code-wrap"><pre>pip freeze > requirements.txt
-python -c "import pandas; import sklearn; print('OK')"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
-    <div class="card"><div class="card-title">3. handoff_notes.md</div>
-    <div class="code-wrap"><pre># handoff_notes.md
 
-## Informasi Pipeline
-- Frekuensi run: bulanan (setiap tanggal 1)
-- Estimasi durasi: ~15 menit
+    <div class="card" style="margin-bottom:8px">
+      <div class="card-title">1. run_pipeline.py — sudah ditest end-to-end</div>
+      <div class="card-desc" style="margin-bottom:10px">Satu file Python yang menjalankan semua tahap dari awal sampai akhir dengan satu perintah. <strong>Wajib ditest oleh DS sendiri sebelum diserahkan</strong> — bukan "kayaknya bisa jalan".</div>
+      <div class="os-tabs">
+        <button class="os-btn active" onclick="ostab('cmdh1','mac',this)">Mac / Linux</button>
+        <button class="os-btn" onclick="ostab('cmdh1','win',this)">Windows</button>
+      </div>
+      <div id="cmdh1-mac" class="os-panel active"><div class="code-wrap"><pre># DS test ini sendiri sebelum handoff — bukan DE yang pertama test
+cd /workspace/202501_tokopedia_churn
+python pipeline/run_pipeline.py --config config/config.yaml
+
+# Yang harus terjadi:
+# ✓ Tidak ada error sampai selesai
+# ✓ File output terbuat di outputs/ atau BQ
+# ✓ Log muncul di terminal dengan jelas (INFO/WARNING/ERROR)
+# ✓ Bisa dijalankan lagi dari awal tanpa masalah</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+      <div id="cmdh1-win" class="os-panel"><div class="code-wrap"><pre>cd C:\workspace\202501_tokopedia_churn
+python pipeline/run_pipeline.py --config config/config.yaml</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+      <div class="callout dont" style="margin-top:10px"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Pipeline jalan di laptop DS tapi gagal di server DE — masalah paling sering</div><div class="c-text">Penyebab umum: path absolut ke folder laptop, library yang tidak ada di requirements.txt, file data yang hanya ada di lokal. Solusi: test pipeline di environment bersih sebelum handoff, atau minta DE test dan lapor kalau ada error.</div></div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:8px">
+      <div class="card-title">2. requirements.txt — daftar semua library yang dibutuhkan</div>
+      <div class="card-desc" style="margin-bottom:10px">DE akan menginstall environment baru dari file ini. Kalau ada library yang dipakai di kode tapi tidak ada di requirements.txt, pipeline akan gagal dengan error "ModuleNotFoundError".</div>
+      <div class="code-wrap"><pre># Generate dari environment yang aktif
+pip freeze > requirements.txt
+
+# Verifikasi — pastikan library utama ada
+python -c "import pandas, sklearn, joblib, yaml, google.cloud.bigquery; print('✓ Semua library tersedia')"
+
+# Cek versi yang dipakai (penting untuk reproduksi)
+pip show pandas scikit-learn lightgbm | grep -E "Name|Version"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <div class="card" style="margin-bottom:8px">
+      <div class="card-title">3. .env.example — template variabel yang dibutuhkan</div>
+      <div class="card-desc" style="margin-bottom:10px">DE butuh tahu environment variable apa saja yang harus di-set. Buat file <code>.env.example</code> dengan nama variabel tapi <strong>nilai dikosongkan</strong> — jangan isi nilai aslinya.</div>
+      <div class="code-wrap"><pre># .env.example — salin menjadi .env dan isi nilainya
+GOOGLE_APPLICATION_CREDENTIALS=/path/ke/service-account.json
+GCP_PROJECT_ID=
+GCS_BUCKET_NAME=
+BQ_DATASET=</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">4. handoff_notes.md — dokumen wajib yang sering dilupakan</div>
+      <div class="card-desc" style="margin-bottom:10px">Ini adalah "manual" pipeline. DE harus bisa membaca dokumen ini dan langsung tahu semua yang perlu diketahui tanpa perlu tanya DS. Semakin lengkap, semakin sedikit bolak-balik komunikasi.</div>
+      <div class="code-wrap"><pre># handoff_notes.md
+
+## Deskripsi Pipeline
+Prediksi churn pelanggan bulanan untuk Tokopedia.
+Model: LightGBM, ditraining dari data Jan 2023 – Des 2024.
+
+## Cara Jalankan
+```bash
+python pipeline/run_pipeline.py --config config/config.yaml
+```
+Estimasi durasi: ~15 menit. Tidak perlu input manual — jalankan dan tunggu.
 
 ## Input
-- BQ table: analytics.churn_features
+| Sumber         | Detail                                      |
+|----------------|---------------------------------------------|
+| BQ table       | `analytics.churn_features`                  |
+| Filter periode | Otomatis ambil bulan berjalan dari config   |
+| Frekuensi data | Update harian oleh pipeline DE lain         |
 
 ## Output
-- BQ table: ds_results.bankbca_churn_predictions (WRITE_TRUNCATE)
-- GCS: gs://bucket/ds-results/predictions_[tanggal].csv
+| Tujuan   | Detail                                                        |
+|----------|---------------------------------------------------------------|
+| BQ table | `ds_results.tokopedia_churn_predictions` (WRITE_TRUNCATE)    |
+| GCS file | `gs://bucket/churn/predictions_YYYYMMDD.csv`                 |
+| Kolom    | user_id, pred_proba, risk_label, run_date                    |
+| Granularity | 1 baris per user_id                                       |
 
-## Yang Perlu Dimonitor
-- Jumlah baris output harus > 10.000
-- Kolom predicted_proba harus antara 0–1
+## Frekuensi Run
+- Jadwal: setiap tanggal 1, pukul 06.00 WIB
+- Input harus tersedia: sebelum tanggal 1 pukul 05.00 WIB
+
+## Kriteria Sukses (untuk monitoring DE)
+- Jumlah baris output: harus antara 50.000 – 200.000
+- Kolom pred_proba: semua nilai antara 0.0 – 1.0, tidak ada NULL
+- Kolom run_date: harus sama dengan tanggal hari ini
+- Log akhir harus menampilkan: "✓ Pipeline selesai"
+
+## Yang Harus Dilakukan Kalau Gagal
+1. Cek log di `outputs/reports/pipeline.log`
+2. Error "BQ query gagal" → cek akses service account ke tabel input
+3. Error "Output kosong" → cek apakah data input bulan ini sudah ada
+4. Error lain → hubungi DS penanggung jawab
 
 ## Kontak
-- DS penanggung jawab: [Nama] ([email])
-- Terakhir ditest: [tanggal]</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+- DS penanggung jawab: [Nama] | [email@perusahaan.com]
+- Terakhir ditest oleh DS: [tanggal]
+- Versi model: model_20250301_0600.pkl</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Kesalahan yang paling sering terjadi saat handoff</div>
+    <div class="card" style="margin-bottom:8px">
+      <div class="card-title">❌ DS tidak test pipeline end-to-end sebelum handoff</div>
+      <div class="card-desc">"Notebook-nya sudah jalan" bukan berarti <code>run_pipeline.py</code>-nya sudah jalan. Notebook dan pipeline adalah dua hal berbeda. DS wajib test pipeline dari terminal sebelum menyerahkan ke DE.</div>
+    </div>
+    <div class="card" style="margin-bottom:8px">
+      <div class="card-title">❌ Format output berubah di menit terakhir tanpa bilang DE</div>
+      <div class="card-desc">DS ganti nama kolom atau tambah kolom baru tanpa konfirmasi DE → pipeline DE yang sudah di-setup langsung rusak. Setiap perubahan format output harus dikomunikasikan ke DE <em>sebelum</em> dieksekusi.</div>
+    </div>
+    <div class="card" style="margin-bottom:8px">
+      <div class="card-title">❌ handoff_notes.md tidak ada atau hanya setengah isi</div>
+      <div class="card-desc">DE tidak tahu frekuensi run, tidak tahu berapa baris yang diharapkan, tidak tahu harus hubungi siapa kalau ada masalah. Setiap pertanyaan DE = waktu DS terpakai untuk jawab sesuatu yang seharusnya sudah terdokumentasi.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">❌ DS anggap handoff selesai saat file diserahkan</div>
+      <div class="card-desc">Handoff selesai saat DE <strong>berhasil menjalankan pipeline</strong> di environment mereka sendiri dan output sesuai ekspektasi — bukan saat DS selesai push ke Git. Alokasikan waktu untuk pendampingan DE di run pertama.</div>
+    </div>
   </div>
 
   <div class="section">
     <div class="section-title">Checklist sebelum handoff</div>
-    <div class="card"><div class="code-wrap"><pre>□ run_pipeline.py bisa dijalankan end-to-end tanpa error
-□ requirements.txt sudah diperbarui
-□ config/config.yaml lengkap (tidak ada placeholder)
-□ .env.example berisi semua variabel yang dibutuhkan
-□ handoff_notes.md sudah ditulis
-□ Format output sudah dikonfirmasi dengan DE
-□ Schema output BQ sudah dikomunikasikan
-□ Ada cara test apakah pipeline berhasil (cek row count)</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+    <div class="card">
+      <div style="display:grid;gap:6px;font-size:13px">
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span><strong>run_pipeline.py</strong> sudah ditest end-to-end tanpa error — oleh DS sendiri</span></label>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span><strong>requirements.txt</strong> sudah diperbarui — semua library yang dipakai ada</span></label>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span><strong>.env.example</strong> berisi semua variabel yang dibutuhkan (nilai dikosongkan)</span></label>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span><strong>config/config.yaml</strong> lengkap — tidak ada nilai placeholder yang belum diisi</span></label>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span><strong>handoff_notes.md</strong> sudah ditulis — input, output, frekuensi, kriteria sukses, kontak</span></label>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span><strong>Format output</strong> sudah dikonfirmasi DE sebelum pipeline jalan — nama kolom, tipe data, granularity</span></label>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span><strong>Tidak ada path absolut</strong> ke folder laptop di kode pipeline</span></label>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span><strong>Logging sudah jelas</strong> — DE bisa tahu pipeline sukses atau gagal hanya dari log</span></label>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span>Ada <strong>waktu untuk pendampingan DE</strong> di run pertama di environment mereka</span></label>
+      </div>
+    </div>
   </div>
 </div>
 
