@@ -3155,125 +3155,100 @@ git push origin feat/01-eda-cohort-[nama-junior]
   <div class="section">
     <div class="section-title">DoD per tahap analisis</div>
 
-    <!-- EDA -->
-    <div class="card" style="margin-bottom:14px">
-      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px;flex-wrap:wrap">
-        <div class="card-title" style="margin:0">DoD — EDA <span style="font-weight:400;color:var(--text2)">(Exploratory Data Analysis)</span></div>
-        <span style="font-size:12px;color:var(--text3)">👉 Tujuan: ngerti data &amp; arah analisis</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
-        <div>
-          <div style="font-size:11px;font-weight:600;color:var(--green);margin-bottom:6px">✅ EDA dianggap selesai kalau</div>
-          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:5px">
-            <li><strong style="color:var(--text)">Struktur data sudah jelas</strong> — jumlah data, kolom, tipe data dipahami</li>
-            <li><strong style="color:var(--text)">Data quality issue teridentifikasi</strong> — missing value, outlier, duplicate, inconsistency</li>
-            <li>Sudah ada <strong style="color:var(--text)">3–5 insight</strong> yang relevan ke bisnis</li>
-            <li>Sudah ada <strong style="color:var(--text)">minimal 1 hipotesis</strong></li>
-            <li>Sudah tahu kandidat feature penting &amp; data yang perlu perhatian</li>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="tab('dod','eda',this)">EDA</button>
+      <button class="tab-btn" onclick="tab('dod','fe',this)">Feature Engineering</button>
+      <button class="tab-btn" onclick="tab('dod','modeling',this)">Modeling</button>
+    </div>
+
+    <!-- ── EDA ── -->
+    <div id="dod-eda" class="tab-panel active">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:14px">👉 Tujuan: ngerti data &amp; arah analisis sebelum lanjut ke tahap berikutnya</div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Dianggap selesai kalau</div>
+      <div class="cl-item"><input type="checkbox" style="margin-top:2px;width:14px;height:14px;accent-color:var(--text);flex-shrink:0"><label class="cl-text" style="cursor:default"><div class="cl-main">Struktur data sudah jelas</div><div class="cl-hint">Jumlah baris, jumlah kolom, tipe data tiap kolom sudah dipahami</div></label></div>
+      <div class="cl-item"><input type="checkbox" style="margin-top:2px;width:14px;height:14px;accent-color:var(--text);flex-shrink:0"><label class="cl-text" style="cursor:default"><div class="cl-main">Data quality issue teridentifikasi</div><div class="cl-hint">Missing value, outlier, duplicate, inconsistency sudah dicatat</div></label></div>
+      <div class="cl-item"><input type="checkbox" style="margin-top:2px;width:14px;height:14px;accent-color:var(--text);flex-shrink:0"><label class="cl-text" style="cursor:default"><div class="cl-main">Ada 3–5 insight yang relevan ke bisnis</div><div class="cl-hint">Bukan cuma grafik — setiap insight ada interpretasinya dalam bahasa bisnis</div></label></div>
+      <div class="cl-item"><input type="checkbox" style="margin-top:2px;width:14px;height:14px;accent-color:var(--text);flex-shrink:0"><label class="cl-text" style="cursor:default"><div class="cl-main">Ada minimal 1 hipotesis</div><div class="cl-hint">Dugaan awal yang akan diuji di tahap berikutnya</div></label></div>
+      <div class="cl-item" style="border-bottom:none"><input type="checkbox" style="margin-top:2px;width:14px;height:14px;accent-color:var(--text);flex-shrink:0"><label class="cl-text" style="cursor:default"><div class="cl-main">Sudah tahu kandidat feature &amp; data yang perlu perhatian</div><div class="cl-hint">Kolom mana yang kemungkinan berguna untuk model, mana yang bermasalah</div></label></div>
+
+      <div class="two-col" style="margin-top:14px;gap:10px">
+        <div style="background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:var(--r);padding:12px">
+          <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:8px">📦 Output minimum</div>
+          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
+            <li>Summary dataset (singkat)</li>
+            <li>List data issues yang ditemukan</li>
+            <li>3–5 insight + interpretasi bisnis</li>
+            <li>Hipotesis awal</li>
           </ul>
         </div>
-        <div style="display:grid;gap:10px">
-          <div>
-            <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:6px">📦 Output minimum</div>
-            <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
-              <li>Summary dataset (singkat)</li>
-              <li>List data issues</li>
-              <li>3–5 insight + interpretasi (bukan cuma grafik)</li>
-              <li>Hipotesis awal</li>
-            </ul>
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:600;color:var(--red);margin-bottom:6px">❌ Tidak perlu</div>
-            <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
-              <li>Visualisasi semua kolom tanpa tujuan</li>
-              <li>Analisis terlalu dalam tanpa arah</li>
-              <li>Statistik kompleks yang tidak dipakai</li>
-            </ul>
-          </div>
+        <div style="background:var(--red-bg);border:1px solid var(--red-bd);border-radius:var(--r);padding:12px">
+          <div style="font-size:11px;font-weight:600;color:var(--red);margin-bottom:8px">❌ Tidak perlu di tahap ini</div>
+          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
+            <li>Visualisasi semua kolom tanpa tujuan</li>
+            <li>Analisis terlalu dalam tanpa arah</li>
+            <li>Statistik kompleks yang tidak dipakai</li>
+          </ul>
         </div>
       </div>
     </div>
 
-    <!-- Feature Engineering -->
-    <div class="card" style="margin-bottom:14px">
-      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px;flex-wrap:wrap">
-        <div class="card-title" style="margin:0">DoD — Feature Engineering</div>
-        <span style="font-size:12px;color:var(--text3)">👉 Tujuan: memastikan feature yang dipakai masuk akal &amp; bisa dijelaskan</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
-        <div>
-          <div style="font-size:11px;font-weight:600;color:var(--green);margin-bottom:6px">✅ FE dianggap selesai kalau</div>
-          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:5px">
-            <li>Ada <strong style="color:var(--text)">final feature list</strong> yang akan dipakai di model</li>
-            <li>Setiap feature punya <strong style="color:var(--text)">penjelasan singkat</strong> (logic / business reasoning)</li>
-            <li>Feature sudah bebas <strong style="color:var(--text)">data leakage</strong> &amp; tidak error (null / format aman)</li>
-            <li>Sudah buang feature yang jelas tidak relevan atau sangat redundant</li>
-            <li>Ada <strong style="color:var(--text)">jejak eksplorasi ringan</strong> — feature yang dicoba tapi tidak dipakai (singkat)</li>
+    <!-- ── Feature Engineering ── -->
+    <div id="dod-fe" class="tab-panel">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:14px">👉 Tujuan: memastikan feature yang dipakai masuk akal &amp; bisa dijelaskan ke klien</div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Dianggap selesai kalau</div>
+      <div class="cl-item"><input type="checkbox" style="margin-top:2px;width:14px;height:14px;accent-color:var(--text);flex-shrink:0"><label class="cl-text" style="cursor:default"><div class="cl-main">Ada final feature list yang akan dipakai di model</div><div class="cl-hint">Daftar kolom final yang sudah dikunci — bukan masih berubah-ubah</div></label></div>
+      <div class="cl-item"><input type="checkbox" style="margin-top:2px;width:14px;height:14px;accent-color:var(--text);flex-shrink:0"><label class="cl-text" style="cursor:default"><div class="cl-main">Setiap feature punya penjelasan singkat</div><div class="cl-hint">Logic atau business reasoning kenapa feature ini dimasukkan</div></label></div>
+      <div class="cl-item"><input type="checkbox" style="margin-top:2px;width:14px;height:14px;accent-color:var(--text);flex-shrink:0"><label class="cl-text" style="cursor:default"><div class="cl-main">Feature bebas data leakage &amp; tidak ada error</div><div class="cl-hint">Tidak ada null, format aman untuk modeling, tidak ada informasi masa depan bocor ke training</div></label></div>
+      <div class="cl-item"><input type="checkbox" style="margin-top:2px;width:14px;height:14px;accent-color:var(--text);flex-shrink:0"><label class="cl-text" style="cursor:default"><div class="cl-main">Feature yang tidak relevan sudah dibuang</div><div class="cl-hint">Yang jelas tidak relevan atau sangat redundant sudah dihilangkan</div></label></div>
+      <div class="cl-item"><input type="checkbox" style="margin-top:2px;width:14px;height:14px;accent-color:var(--text);flex-shrink:0"><label class="cl-text" style="cursor:default"><div class="cl-main">Light EDA pada feature baru sudah dilakukan</div><div class="cl-hint">Cek distribusi, hubungan ke target, sanity check — make sense atau tidak</div></label></div>
+      <div class="cl-item" style="border-bottom:none"><input type="checkbox" style="margin-top:2px;width:14px;height:14px;accent-color:var(--text);flex-shrink:0"><label class="cl-text" style="cursor:default"><div class="cl-main">Ada jejak eksplorasi feature yang tidak dipakai</div><div class="cl-hint">Singkat cukup — catatan feature yang dicoba tapi tidak lolos seleksi</div></label></div>
+
+      <div class="two-col" style="margin-top:14px;gap:10px">
+        <div style="background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:var(--r);padding:12px">
+          <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:8px">📦 Output minimum</div>
+          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
+            <li>Final feature list (nama kolom)</li>
+            <li>Deskripsi singkat tiap feature</li>
+            <li>Catatan feature yang tidak dipakai (opsional)</li>
           </ul>
-          <div style="margin-top:10px;padding:10px;background:var(--bg);border-radius:var(--r);border:1px solid var(--border)">
-            <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px">🔍 Feature Exploration (Light EDA)</div>
-            <ul style="margin:0 0 0 16px;padding:0;font-size:12px;color:var(--text3);display:grid;gap:3px">
-              <li>Cek distribusi feature baru</li>
-              <li>Cek hubungan sederhana ke target</li>
-              <li>Sanity check — make sense atau tidak</li>
-            </ul>
-          </div>
         </div>
-        <div style="display:grid;gap:10px">
-          <div>
-            <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:6px">📦 Output minimum</div>
-            <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
-              <li>Final feature list</li>
-              <li>Deskripsi singkat tiap feature</li>
-              <li>Catatan singkat feature yang tidak dipakai (opsional)</li>
-            </ul>
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:600;color:var(--red);margin-bottom:6px">❌ Tidak perlu</div>
-            <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
-              <li>Buktiin semua feature improve metric</li>
-              <li>Feature terlalu banyak tanpa alasan</li>
-              <li>Transformasi kompleks tanpa tujuan jelas</li>
-            </ul>
-          </div>
+        <div style="background:var(--red-bg);border:1px solid var(--red-bd);border-radius:var(--r);padding:12px">
+          <div style="font-size:11px;font-weight:600;color:var(--red);margin-bottom:8px">❌ Tidak perlu di tahap ini</div>
+          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
+            <li>Buktiin semua feature improve metric</li>
+            <li>Feature terlalu banyak tanpa alasan jelas</li>
+            <li>Transformasi kompleks tanpa tujuan</li>
+          </ul>
         </div>
       </div>
     </div>
 
-    <!-- Modeling -->
-    <div class="card">
-      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px;flex-wrap:wrap">
-        <div class="card-title" style="margin:0">DoD — Modeling</div>
-        <span style="font-size:12px;color:var(--text3)">👉 Tujuan: menghasilkan model yang cukup baik &amp; bisa dipakai</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
-        <div>
-          <div style="font-size:11px;font-weight:600;color:var(--green);margin-bottom:6px">✅ Modeling dianggap selesai kalau</div>
-          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:5px">
-            <li>Ada <strong style="color:var(--text)">baseline model</strong> (WAJIB)</li>
-            <li>Ada <strong style="color:var(--text)">1–2 improvement</strong> dari baseline</li>
-            <li>Metric yang digunakan sesuai dengan use case bisnis</li>
-            <li>Model sudah dicek overfitting / underfitting (secara basic)</li>
-            <li>Ada <strong style="color:var(--text)">interpretasi hasil model ke bisnis</strong> — bukan cuma angka metric</li>
+    <!-- ── Modeling ── -->
+    <div id="dod-modeling" class="tab-panel">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:14px">👉 Tujuan: menghasilkan model yang cukup baik &amp; bisa dijelaskan ke bisnis</div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Dianggap selesai kalau</div>
+      <div class="cl-item"><input type="checkbox" style="margin-top:2px;width:14px;height:14px;accent-color:var(--text);flex-shrink:0"><label class="cl-text" style="cursor:default"><div class="cl-main">Ada baseline model — WAJIB</div><div class="cl-hint">Minimal DummyClassifier / DummyRegressor. Tidak ada baseline = tidak tahu apakah model kita berguna</div></label><span class="cl-badge w">Wajib</span></div>
+      <div class="cl-item"><input type="checkbox" style="margin-top:2px;width:14px;height:14px;accent-color:var(--text);flex-shrink:0"><label class="cl-text" style="cursor:default"><div class="cl-main">Ada 1–2 improvement dari baseline</div><div class="cl-hint">Cukup 1-2 percobaan yang terdokumentasi — bukan trial and error tanpa catatan</div></label></div>
+      <div class="cl-item"><input type="checkbox" style="margin-top:2px;width:14px;height:14px;accent-color:var(--text);flex-shrink:0"><label class="cl-text" style="cursor:default"><div class="cl-main">Metric yang dipakai sesuai use case bisnis</div><div class="cl-hint">FP vs FN mana yang lebih mahal? Metric harus mencerminkan konsekuensi bisnis</div></label></div>
+      <div class="cl-item"><input type="checkbox" style="margin-top:2px;width:14px;height:14px;accent-color:var(--text);flex-shrink:0"><label class="cl-text" style="cursor:default"><div class="cl-main">Sudah dicek overfitting / underfitting</div><div class="cl-hint">Minimal bandingkan train score vs test score — gap > 0.1 perlu penjelasan</div></label></div>
+      <div class="cl-item" style="border-bottom:none"><input type="checkbox" style="margin-top:2px;width:14px;height:14px;accent-color:var(--text);flex-shrink:0"><label class="cl-text" style="cursor:default"><div class="cl-main">Ada interpretasi hasil ke bisnis — bukan cuma angka metric</div><div class="cl-hint">"AUC 0.84" bukan output — "dari 100 pelanggan berisiko, 75 benar-benar churn" adalah output</div></label></div>
+
+      <div class="two-col" style="margin-top:14px;gap:10px">
+        <div style="background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:var(--r);padding:12px">
+          <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:8px">📦 Output minimum</div>
+          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
+            <li>Perbandingan baseline vs final model</li>
+            <li>Metric + penjelasan dalam bahasa bisnis</li>
+            <li>Insight dari model (feature penting, pola error)</li>
           </ul>
         </div>
-        <div style="display:grid;gap:10px">
-          <div>
-            <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:6px">📦 Output minimum</div>
-            <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
-              <li>Perbandingan baseline vs final model</li>
-              <li>Metric + penjelasan sederhana</li>
-              <li>Insight dari model (misal: feature penting)</li>
-            </ul>
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:600;color:var(--red);margin-bottom:6px">❌ Tidak perlu</div>
-            <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
-              <li>Langsung pakai model kompleks</li>
-              <li>Tuning berlebihan tanpa impact jelas</li>
-              <li>Fokus ke metric tanpa konteks bisnis</li>
-            </ul>
-          </div>
+        <div style="background:var(--red-bg);border:1px solid var(--red-bd);border-radius:var(--r);padding:12px">
+          <div style="font-size:11px;font-weight:600;color:var(--red);margin-bottom:8px">❌ Tidak perlu di tahap ini</div>
+          <ul style="margin:0 0 0 16px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:4px">
+            <li>Langsung pakai model kompleks tanpa baseline</li>
+            <li>Tuning berlebihan tanpa impact jelas</li>
+            <li>Laporan metric tanpa konteks bisnis</li>
+          </ul>
         </div>
       </div>
     </div>
