@@ -3349,37 +3349,181 @@ print(f"Setelah agregasi : {len(df_monthly):,} baris")  # jauh lebih kecil</pre>
 
 <!-- ═══════════════════════════════════════════════ COLLAB -->
 <div id="page-collab" class="page">
-  <div class="ph"><div class="ph-title">Kolaborasi Tim</div><div class="ph-desc">Standar kerja tim mencegah konflik dan memudahkan review — penting di tim campuran senior-junior.</div></div>
+  <div class="ph"><div class="ph-title">Kolaborasi Tim</div><div class="ph-desc">Standar kerja tim mencegah konflik dan memudahkan review — penting di tim campuran senior-junior dengan berbagai pola kerja.</div></div>
 
   <div class="section">
-    <div class="section-title">Tanggung jawab per project</div>
-    <div class="callout do"><div class="c-icon">✅</div><div class="c-body"><div class="c-label">Setiap project punya satu PIC — tetapkan sejak brief</div><div class="c-text">PIC bertanggung jawab penuh: kualitas output, komunikasi klien, handoff ke DE.</div></div></div>
-    <div class="code-wrap"><pre>## Tim Project (cantumkan di README.md)
-- PIC DS    : [Nama Senior] — kualitas & delivery
-- DS Support: [Nama Junior] — EDA dan cleaning
-- DE        : [Nama DE] — infra dan scheduling</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    <div class="section-title">Peran di project — tiga pola yang sering terjadi</div>
+    <div class="callout tip" style="margin-bottom:12px"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">DE terlibat di setiap tahap — bukan hanya di akhir</div><div class="c-text">PIC DE tetap bertanggung jawab di akhir untuk pipeline dan scheduling. Tapi DE harus dilibatkan sejak brief (setup akses, konfirmasi schema), diupdate di tengah (perubahan output format), dan menjadi gerbang terakhir sebelum project dianggap selesai.</div></div></div>
+    <div class="card" style="margin-bottom:8px">
+      <div class="card-title">Pola A — PIC murni: senior review, junior yang ngerjain</div>
+      <div class="card-desc" style="margin-bottom:8px">Senior bertanggung jawab atas kualitas dan delivery DS, tapi tidak turun ke detail. Junior mengerjakan notebook, senior mereview di milestone tertentu. DE terlibat dari awal untuk setup dan di akhir untuk handoff.</div>
+      <div class="code-wrap"><pre>## Tim Project — Pola A
+- PIC DS (Senior) : [Nama] — kualitas, komunikasi klien, koordinasi dengan DE
+- DS Junior       : [Nama] — EDA, cleaning, feature engineering, modelling
+- PIC DE          : [Nama] — setup akses &amp; infra, review handoff, scheduling pipeline
+# DE terlibat: awal (setup) → tengah (konfirmasi format output) → akhir (pipeline)</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+    <div class="card" style="margin-bottom:8px">
+      <div class="card-title">Pola B — PIC sekaligus mengerjakan detail</div>
+      <div class="card-desc" style="margin-bottom:8px">Senior turun mengerjakan bagian tertentu sekaligus me-review pekerjaan junior. Perlu pembagian scope yang eksplisit di awal supaya tidak tabrakan.</div>
+      <div class="code-wrap"><pre>## Tim Project — Pola B (scope dibagi eksplisit)
+- PIC DS (Senior) : [Nama] — modelling + review EDA junior + delivery + koordinasi DE
+- DS Junior       : [Nama] — EDA (notebook 01–03) + cleaning
+- PIC DE          : [Nama] — setup infra, konfirmasi schema, handoff &amp; scheduling
+# → Tetapkan siapa ngerjain notebook berapa sejak awal brief
+# → Senior tidak ubah notebook junior tanpa konfirmasi
+# → DE dikonfirmasi format output sebelum DS mulai export</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Pola C — Dua DS paralel dengan scope berbeda</div>
+      <div class="card-desc" style="margin-bottom:8px">Dua DS mengerjakan bagian berbeda dari project yang sama secara bersamaan. DE tetap jadi gerbang terakhir sebelum project selesai.</div>
+      <div class="code-wrap"><pre>## Tim Project — Pola C
+- DS A (Senior/PIC): modelling + export — branch: feat/modeling-[namaA]
+- DS B (Junior)    : EDA + cleaning   — branch: feat/eda-cleaning-[namaB]
+- PIC DE           : [Nama] — setup infra, review semua output DS, pipeline &amp; scheduling
+# → Sepakati format output DS B yang akan dipakai DS A di awal
+# → DS A tidak mulai modelling sebelum cleaning DS B selesai (kalau sequential)
+# → DE konfirmasi semua output sudah sesuai sebelum pipeline dijalankan</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
   </div>
 
   <div class="section">
-    <div class="section-title">Update progres ke senior</div>
-    <div class="code-wrap"><pre>Milestone yang perlu di-update ke senior:
-□ EDA selesai → share temuan utama (bukan detail teknis)
-□ Cleaning selesai → konfirmasi keputusan handling missing/outlier
-□ Model pertama jalan → share metrik awal vs target
-□ Siap handoff ke DE → minta review checklist handoff
-□ Klien minta revisi → eskalasi ke senior SEBELUM dieksekusi</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    <div class="section-title">Sequential vs paralel — kapan bisa bareng, kapan harus tunggu</div>
+    <div class="callout tip"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Sepakati pola kerja di brief — jangan asumsi</div><div class="c-text">Kalau tidak eksplisit disepakati, senior sering menunggu junior yang sebetulnya bisa paralel, atau junior mulai sebelum waktunya dan harus mengulang.</div></div></div>
+
+    <div class="card" style="margin-top:10px">
+      <div class="card-title">Sequential — A harus selesai sebelum B mulai</div>
+      <div class="card-desc" style="margin-bottom:10px">Berlaku kalau output A adalah input langsung B. Memaksakan paralel di sini berarti B harus mengulang pekerjaannya.</div>
+      <table style="margin:0">
+        <tr><th>Tahap A (harus selesai dulu)</th><th>Tahap B (baru bisa mulai)</th><th>Kenapa</th></tr>
+        <tr><td>Brief + DE setup akses &amp; schema</td><td>DS mulai query BQ / load data</td><td>Query salah schema = harus redo dari awal</td></tr>
+        <tr><td>EDA + identifikasi data issues</td><td>Cleaning &amp; handling missing/outlier</td><td>Cleaning butuh keputusan dari EDA</td></tr>
+        <tr><td>Review &amp; approval EDA oleh PIC DS</td><td>Junior lanjut ke cleaning</td><td>Arah analisis bisa berubah setelah review</td></tr>
+        <tr><td>Cleaning &amp; feature engineering</td><td>Modeling</td><td>Model butuh data bersih &amp; feature final</td></tr>
+        <tr><td>DS konfirmasi format output ke DE</td><td>DS mulai export ke BQ/GCS</td><td>Format salah = DE harus redo pipeline</td></tr>
+        <tr><td>DS export &amp; DE verifikasi output</td><td>DE setup scheduling &amp; pipeline</td><td>Pipeline tidak bisa dijalankan sebelum output valid</td></tr>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:10px">
+      <div class="card-title">Paralel — bisa dikerjakan bersamaan</div>
+      <div class="card-desc" style="margin-bottom:10px">Output tidak saling bergantung secara langsung. Koordinasi tetap perlu tapi tidak harus menunggu.</div>
+      <table style="margin:0">
+        <tr><th>Pihak A</th><th>Pihak B (bersamaan)</th><th>Yang perlu disepakati dulu</th></tr>
+        <tr><td>DS: EDA dataset transaksi</td><td>DS: EDA dataset profil pelanggan</td><td>Format output supaya bisa digabung</td></tr>
+        <tr><td>DS: finishing cleaning + feature</td><td>Senior: mulai struktur kode modeling</td><td>Nama kolom &amp; format feature yang akan dipakai</td></tr>
+        <tr><td>DS: develop model</td><td>DE: setup infra, tabel BQ, akses GCS</td><td>Format output model, nama tabel target, frekuensi run</td></tr>
+        <tr><td>DS A: ngerjain segmen A</td><td>DS B: ngerjain segmen B</td><td>Definisi segmen tidak overlap, format output sama</td></tr>
+        <tr><td>DS: EDA + modelling</td><td>DE: setup scheduling &amp; monitoring pipeline</td><td>Estimasi waktu DS selesai, format handoff notes</td></tr>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:10px">
+      <div class="card-title">Template pembagian kerja di README</div>
+      <div class="code-wrap" style="margin-top:8px"><pre>## Pembagian Kerja &amp; Dependensi
+
+### Sequential (harus berurutan)
+[ DE PIC    ] setup akses BQ + konfirmasi schema (selesai ~[tanggal])
+                  ↓
+[ DS Junior ] 01_eda → 02_cleaning (selesai ~[tanggal])
+                  ↓
+[ PIC DS    ] review &amp; approve EDA
+                  ↓
+[ PIC DS    ] 03_feature + 04_modeling → export ke BQ
+                  ↓
+[ DE PIC    ] verifikasi output + setup pipeline + scheduling
+
+### Paralel (bisa jalan bersamaan)
+[ DS Junior ] 01_eda_transaksi    ──┐
+[ PIC DS    ] 01_eda_profil_user  ──┴→ merge di notebook 02
+
+[ DS PIC    ] modelling ──────────┐
+[ DE PIC    ] setup infra &amp; BQ ──┴→ handoff setelah DS export selesai
+
+### Koordinasi
+- Daily sync: 10 menit tiap pagi — update progress &amp; blocker
+- Blocker langsung ping di chat — jangan tunggu sync berikutnya
+- DE harus tahu setiap perubahan format output SEBELUM dieksekusi</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
   </div>
 
   <div class="section">
-    <div class="section-title">Workflow review kode</div>
-    <div class="card"><div class="card-title">Dengan Git</div>
-    <div class="code-wrap"><pre>git checkout -b feat/01-eda-cohort-[nama-junior]
-git add notebooks/01_eda_cohort.ipynb
-git commit -m "add: EDA cohort bulanan selesai, siap review"
-git push origin feat/01-eda-cohort-[nama-junior]
-# Buat PR → tag senior sebagai reviewer</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
-    <div class="card"><div class="card-title">Tanpa Git</div>
-    <div class="card-desc">Junior kirim dengan format versi: <code>01_eda_cohort_v1_[nama]_20250315.ipynb</code>. Setelah approved, simpan versi final di <code>notebooks/01_eda_cohort.ipynb</code>.</div></div>
+    <div class="section-title">Cara PIC / senior review hasil junior</div>
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-title">Yang dicek saat review — urutan prioritas</div>
+      <ol style="margin:10px 0 0 18px;padding:0;font-size:13px;color:var(--text2);display:grid;gap:8px">
+        <li><strong>Restart &amp; Run All tanpa error</strong> — cek pertama sebelum baca apapun. Kalau gagal, kembalikan dulu ke junior.</li>
+        <li><strong>Arah analisis benar</strong> — apakah yang dikerjakan sesuai brief? Apakah pertanyaan bisnis terjawab?</li>
+        <li><strong>Logic bisnis masuk akal</strong> — apakah keputusan cleaning, handling missing, pemilihan feature bisa dijelaskan ke klien?</li>
+        <li><strong>Output sesuai yang diharapkan</strong> — format, nama kolom, granularity sudah sesuai kebutuhan tahap berikutnya?</li>
+        <li><strong>Tidak ada credentials / path absolut</strong> — cek sebelum output dibagikan ke mana pun.</li>
+        <li><strong>Ada insight &amp; kesimpulan</strong> — bukan hanya kode dan grafik. Ada interpretasi bisnis?</li>
+      </ol>
+    </div>
+
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-title">Review via Git — dengan Pull Request</div>
+      <div class="card-desc" style="margin-bottom:10px">Cara terbaik kalau tim sudah pakai Git. Junior push branch-nya, senior review langsung di PR sebelum di-merge ke main.</div>
+      <div class="code-wrap"><pre>## Junior — kirim ke review
+git checkout -b feat/01-eda-churn-[nama-junior]
+git add notebooks/01_eda_churn_[topik].ipynb
+git commit -m "add: EDA selesai — 4 insight, siap review"
+git push -u origin feat/01-eda-churn-[nama-junior]
+# → Beritahu senior: "branch feat/01-eda-churn sudah bisa di-review"
+
+## Senior — review &amp; merge kalau sudah OK
+git fetch origin
+git checkout feat/01-eda-churn-[nama-junior]
+# Buka notebook, jalankan Restart &amp; Run All, cek logic &amp; output
+# Kalau ada yang perlu diperbaiki → minta junior fix di branch yang sama
+
+git checkout main
+git merge feat/01-eda-churn-[nama-junior]
+git push origin main</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Review tanpa Git — via file sharing</div>
+      <div class="card-desc" style="margin-bottom:10px">Untuk PIC yang belum familiar dengan Git, atau situasi darurat. Lebih manual tapi tetap bisa terstruktur dengan konvensi nama yang jelas.</div>
+      <div class="code-wrap"><pre>## Junior — kirim untuk review
+# Format nama: [nomor]_[tahap]_[topik]_v[versi]_[nama]_YYYYMMDD.ipynb
+01_eda_churn_v1_budi_20250315.ipynb
+
+# Kirim via folder shared (GCS, shared drive, dll)
+# Sertakan catatan singkat: "EDA selesai. Ada 4 insight utama.
+#   Satu hal yang perlu konfirmasi: handling missing di kolom 'region' (8%)
+#   — apakah diimputasi modus atau dibuat kategori Unknown?"
+
+## Senior — review &amp; feedback
+# 1. Download, jalankan Restart &amp; Run All
+# 2. Tambahkan komentar di cell markdown atau tulis di chat
+# 3. Kalau perlu revisi → junior buat versi baru: v2_budi_20250317.ipynb
+# 4. Kalau sudah OK → simpan versi final tanpa nama/versi:
+#    01_eda_churn_[topik].ipynb  ← ini yang jadi "official"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <div class="callout tip" style="margin-top:10px"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Selalu sertakan catatan saat kirim ke review</div><div class="c-text">Jangan kirim notebook tanpa konteks. Tulis singkat: apa yang sudah selesai, apa yang masih perlu keputusan senior, dan apakah ada assumption yang perlu dikonfirmasi. Senior tidak perlu baca semua sel untuk tahu harus fokus ke mana.</div></div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Update progres ke senior / PIC</div>
+    <div class="card">
+      <div class="card-title">Milestone yang perlu dikomunikasikan — ke siapa dan kapan</div>
+      <div class="code-wrap" style="margin-top:8px"><pre>#                                          → PIC DS   → DE PIC
+□ Brief selesai                               ✓          ✓   konfirmasi scope, akses, schema
+□ DE selesai setup akses + schema             ✓          —   DS bisa mulai query
+□ Data berhasil di-load                       ✓          —   update jumlah baris &amp; isu awal
+□ EDA selesai                                 ✓          —   share 3 temuan utama
+□ Cleaning selesai                            ✓          —   konfirmasi keputusan handling
+□ Format output disepakati                    ✓          ✓   DE perlu tahu sebelum DS export
+□ Feature list final                          ✓          —   sign-off sebelum modeling
+□ Model baseline jalan                        ✓          —   share metrik awal vs target
+□ Export ke BQ/GCS selesai                    ✓          ✓   DE mulai verifikasi &amp; pipeline
+□ DE verifikasi output OK                     ✓          ✓   pipeline bisa dijadwalkan
+□ Ada blocker (data, akses, format)           ✓          ✓   langsung ping — jangan tunggu
+□ Klien minta revisi                          ✓          ✓   eskalasi SEBELUM dieksekusi</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+    <div class="callout dont" style="margin-top:10px"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Jangan ubah format output tanpa konfirmasi DE</div><div class="c-text">DS ganti nama kolom atau granularity output di tengah jalan tanpa bilang DE = pipeline DE rusak saat dijalankan. Setiap perubahan format output harus dikomunikasikan ke DE <em>sebelum</em> dieksekusi, bukan sesudah.</div></div></div>
+    <div class="callout dont" style="margin-top:8px"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Jangan anggap project selesai sebelum DE konfirmasi pipeline jalan</div><div class="c-text">DS bilang "sudah export ke BQ" bukan berarti selesai. Project baru selesai kalau DE sudah verifikasi output benar, pipeline berjalan tanpa error, dan scheduling sudah aktif.</div></div></div>
   </div>
 </div>
 
