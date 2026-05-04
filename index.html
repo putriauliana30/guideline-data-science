@@ -250,7 +250,11 @@ tr:last-child td { border-bottom:none }
     <span class="nav-label">Submit</span>
     <a class="nav-item" onclick="nav('checklist',this)"><span class="nav-ico">✓</span>DoD &amp; Checklist</a>
   </div>
-  <div class="sidebar-footer">v2.0 · Tim Advance Analytics</div>
+  <div class="nav-group">
+    <span class="nav-label">Kontribusi</span>
+    <a class="nav-item" onclick="nav('contribute',this)"><span class="nav-ico">✎</span>Usul perubahan</a>
+  </div>
+  <div class="sidebar-footer">v2.0 · Advanced Analytics Team</div>
 </nav>
 
 <main class="main">
@@ -3790,6 +3794,174 @@ git push origin main</pre><button class="copy-btn" onclick="cp(this)">Copy</butt
   <div class="callout dont"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Jangan centang kalau belum benar-benar selesai</div><div class="c-text">Kalau ada item yang tidak terpenuhi karena constraints tertentu, komunikasikan ke senior dan catat sebagai known limitation — jangan disembunyikan.</div></div></div>
 
   <button onclick="resetCL()" style="margin-top:8px;font-size:12px;padding:6px 16px;border:1px solid var(--border);border-radius:20px;cursor:pointer;background:var(--surface);color:var(--text2);font-family:var(--sans)">Reset semua</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════ CONTRIBUTE -->
+<div id="page-contribute" class="page">
+  <div class="ph">
+    <div class="ph-title">Usul Perubahan Playbook</div>
+    <div class="ph-desc">Playbook ini milik semua — kalau ada yang kurang tepat, ketinggalan, atau bisa diperjelas, usulkan. Ada proses yang jelas supaya perubahan tidak asal masuk.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Siapa yang mengelola playbook ini</div>
+    <div class="card">
+      <div class="two-col">
+        <div>
+          <div class="col-label">Owner / Editor</div>
+          <div style="font-size:13px;color:var(--text2);margin-top:6px;display:grid;gap:4px">
+            <div><strong style="color:var(--text)">Advanced Analytics Team</strong></div>
+            <div>thinktanklibrarian@gmail.com</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:2px">Satu-satunya yang bisa implement perubahan ke file ini. Semua proposal masuk ke dia dulu.</div>
+          </div>
+        </div>
+        <div>
+          <div class="col-label">Jadwal review proposal</div>
+          <div style="font-size:13px;color:var(--text2);margin-top:6px;display:grid;gap:4px">
+            <div>Setiap <strong style="color:var(--text)">awal bulan</strong> — semua proposal yang masuk dikumpulkan dan direview bersama</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:2px">Darurat (info salah / menyesatkan) → langsung ping owner, tidak perlu tunggu jadwal</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Tiga jalur — pilih sesuai jenis perubahan</div>
+
+    <div style="display:grid;gap:10px">
+      <div style="border:1px solid var(--green-bd);background:var(--green-bg);border-radius:var(--rl);padding:16px">
+        <div style="font-size:13px;font-weight:600;color:var(--green);margin-bottom:6px">🟢 Jalur 1 — Koreksi kecil</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Typo, nama yang salah, link mati, contoh kode yang error. Tidak mengubah substansi konten.</div>
+        <div style="font-size:12px;color:var(--text2)"><strong>Cara:</strong> ping owner langsung di chat — sebutkan halaman + apa yang salah + yang seharusnya benar.<br>
+        <strong>Target selesai:</strong> 1–3 hari kerja.</div>
+      </div>
+
+      <div style="border:1px solid var(--blue-bd);background:var(--blue-bg);border-radius:var(--rl);padding:16px">
+        <div style="font-size:13px;font-weight:600;color:var(--blue);margin-bottom:6px">🔵 Jalur 2 — Tambah konten / perubahan substansial</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Tambah bagian baru, ubah panduan yang sudah ada, restruktur halaman. Perlu review sebelum masuk.</div>
+        <div style="font-size:12px;color:var(--text2)"><strong>Cara:</strong> isi template proposal di bawah → kirim ke owner via chat atau email.<br>
+        <strong>Target selesai:</strong> dibahas di review bulanan berikutnya.</div>
+      </div>
+
+      <div style="border:1px solid var(--red-bd);background:var(--red-bg);border-radius:var(--rl);padding:16px">
+        <div style="font-size:13px;font-weight:600;color:var(--red);margin-bottom:6px">🔴 Jalur 3 — Darurat (informasi salah / menyesatkan)</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Panduan yang ada bisa menyebabkan kesalahan serius kalau diikuti — contoh: cara simpan credentials yang salah, langkah Git yang merusak repo.</div>
+        <div style="font-size:12px;color:var(--text2)"><strong>Cara:</strong> langsung ping owner + tag di grup tim. Jangan tunggu jadwal review.<br>
+        <strong>Target selesai:</strong> hari yang sama atau maksimal 24 jam.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Template proposal — copy, isi, kirim ke owner</div>
+    <div class="card">
+      <div class="card-desc" style="margin-bottom:10px">Semakin lengkap proposal, semakin cepat bisa dievaluasi. Proposal tanpa konteks atau draft konten biasanya butuh bolak-balik klarifikasi.</div>
+      <div class="code-wrap"><pre>## Proposal Perubahan Playbook
+
+Diusulkan oleh  : [Nama kamu]
+Tanggal          : [YYYY-MM-DD]
+Jalur            : [ ] Koreksi kecil  [ ] Tambah/ubah konten  [ ] Darurat
+
+---
+
+### Bagian yang diusulkan
+Halaman  : [nama halaman — contoh: "Standar Notebook", "Git dasar"]
+Section  : [nama section — contoh: "Aturan penting"]
+
+### Situasi saat ini
+[Apa yang sekarang ada di playbook? Kenapa kurang tepat atau perlu ditambah?
+Kalau bisa, sertakan konteks: kasus nyata yang dialami tim, atau feedback dari junior.]
+
+### Usulan perubahan
+[Draft konten yang diusulkan. Bisa dalam bentuk poin-poin atau paragraf.
+Tidak harus sempurna — owner yang akan format akhirnya.]
+
+### Alasan / justifikasi
+[Kenapa perubahan ini penting? Ada kasus spesifik yang jadi latar belakang?]
+
+### Prioritas
+[ ] Mendesak — ada yang bisa salah kalau tidak segera diperbaiki
+[ ] Normal   — perlu masuk tapi tidak urgent
+[ ] Nice to have — kalau sempat</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Alternatif — usul langsung lewat Git (untuk yang sudah familiar)</div>
+    <div class="callout tip"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Cara ini lebih cepat — owner langsung lihat perubahannya, tidak perlu describe ulang</div><div class="c-text">Daripada nulis template proposal, kamu bisa langsung edit file-nya di branch baru. Owner tinggal review diff-nya dan merge kalau setuju. Tetap butuh approval owner sebelum masuk ke main.</div></div></div>
+    <div class="card" style="margin-top:10px">
+      <div class="card-title">Langkah untuk pengusul</div>
+      <div class="code-wrap" style="margin-top:8px"><pre># 1. Ambil versi terbaru
+git checkout main
+git pull origin main
+
+# 2. Buat branch baru — format: propose/[halaman]-[deskripsi-singkat]
+git checkout -b propose/notebook-tambah-contoh-magic-number
+
+# 3. Edit index.html di VSCode
+#    Ctrl+F → ketik teks yang tampil di browser → edit bagian itu
+
+# 4. Commit dan push
+git add index.html
+git commit -m "propose: tambah contoh magic number di halaman Notebook"
+git push -u origin propose/notebook-tambah-contoh-magic-number
+
+# 5. Ping owner di chat — sebutkan nama branch + penjelasan singkat</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+    <div class="card" style="margin-top:10px">
+      <div class="card-title">Langkah untuk owner — review &amp; merge</div>
+      <div class="code-wrap" style="margin-top:8px"><pre># 1. Checkout branch pengusul
+git fetch origin
+git checkout propose/notebook-tambah-contoh-magic-number
+
+# 2. Lihat perubahan — merah (-) = dihapus, hijau (+) = ditambah
+git diff main index.html
+
+# 3. Buka index.html di browser untuk cek tampilannya
+
+# ── Setuju → merge ────────────────────────────────────────────
+git checkout main
+git merge propose/notebook-tambah-contoh-magic-number
+git push origin main
+git branch -d propose/notebook-tambah-contoh-magic-number
+
+# ── Perlu revisi → jangan merge ───────────────────────────────
+# Balas chat dengan feedback spesifik.
+# Pengusul perbaiki di branch yang sama, push lagi, owner review ulang.</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <div class="callout warn" style="margin-top:10px"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Jangan edit langsung di branch main</div><div class="c-text">Selalu buat branch dengan prefix <code>propose/</code>. Main adalah versi live — kalau langsung edit dan ada yang salah, semua orang yang buka playbook kena dampaknya.</div></div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Setelah perubahan diimplementasi</div>
+    <div class="card">
+      <div class="card-title">Owner mengumumkan ke tim — format standar</div>
+      <div class="code-wrap" style="margin-top:8px"><pre>📋 Playbook Update — v[versi baru] · [tanggal]
+
+Yang berubah:
+• [Halaman X] — [deskripsi singkat perubahan]
+• [Halaman Y] — [deskripsi singkat perubahan]
+
+Diusulkan oleh: [nama pengusul] 🙏
+Berlaku sejak  : sekarang
+
+[link ke playbook]</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <div class="callout tip" style="margin-top:10px"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Update versi di footer sidebar setiap ada perubahan</div><div class="c-text">Format: <code>v[major].[minor]</code> — major naik kalau ada restruktur besar, minor naik kalau tambah atau ubah konten. Contoh: v2.0 → v2.1 untuk tambah section baru.</div></div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Yang tidak perlu diusulkan — langsung diskusi dulu</div>
+    <div class="callout warn"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Beda pendapat bukan berarti salah satu harus masuk ke playbook</div><div class="c-text">Playbook berisi standar yang disepakati tim — bukan semua pendapat pribadi. Kalau ada perbedaan pendapat soal approach teknis, diskusikan dulu di forum tim. Baru kalau ada konsensus, masukkan sebagai proposal.</div></div></div>
+    <table style="margin-top:10px">
+      <tr><th>Tidak perlu diusulkan ke playbook</th><th>Yang lebih tepat dilakukan</th></tr>
+      <tr><td>Preferensi personal yang tidak ada konsensusnya</td><td>Diskusi di grup / forum teknis</td></tr>
+      <tr><td>Kasus sangat spesifik yang hanya relevan untuk satu project</td><td>Catat di README project tersebut</td></tr>
+      <tr><td>Panduan untuk tools yang belum dipakai tim</td><td>Tunggu sampai tim mulai pakai, baru usulkan</td></tr>
+      <tr><td>Hal yang sudah ada di playbook tapi tidak kamu tahu</td><td>Search dulu pakai Ctrl+F di browser</td></tr>
+    </table>
+  </div>
 </div>
 
 </main>
