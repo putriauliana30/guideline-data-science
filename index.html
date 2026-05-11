@@ -193,7 +193,14 @@ tr:last-child td { border-bottom:none }
 .dod-list li:last-child { border-bottom:none }
 .dod-list li::before { content:'☐'; font-size:13px; flex-shrink:0; color:var(--text3) }
 
-/* ── scrollbar ───────────────────────────── */
+.quiz-opt { display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px;color:var(--text2);transition:background .1s,border-color .1s;margin-bottom:6px;background:var(--surface) }
+.quiz-opt:hover { background:var(--bg);border-color:var(--border2) }
+.quiz-opt.selected { border-color:var(--text);color:var(--text);background:var(--bg) }
+.quiz-opt.correct  { border-color:var(--green);background:var(--green-bg);color:var(--green) }
+.quiz-opt.wrong    { border-color:var(--red);background:var(--red-bg);color:var(--red) }
+.quiz-opt input    { margin-top:1px;accent-color:var(--text);flex-shrink:0 }
+.quiz-q-label      { font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:8px }
+.quiz-q-text       { font-size:14px;font-weight:500;color:var(--text);margin-bottom:14px;line-height:1.5 }
 ::-webkit-scrollbar { width:5px; height:5px }
 ::-webkit-scrollbar-track { background:transparent }
 ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px }
@@ -253,6 +260,10 @@ tr:last-child td { border-bottom:none }
   <div class="nav-group">
     <span class="nav-label">Kontribusi</span>
     <a class="nav-item" onclick="nav('contribute',this)"><span class="nav-ico">✎</span>Usul perubahan</a>
+  </div>
+  <div class="nav-group">
+    <span class="nav-label">Kuis</span>
+    <a class="nav-item" onclick="nav('quiz',this)"><span class="nav-ico">?</span>Uji pemahamanmu</a>
   </div>
   <div class="sidebar-footer">v2.0 · Advanced Analytics Team</div>
 </nav>
@@ -3974,6 +3985,34 @@ Berlaku sejak  : sekarang
   </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════ QUIZ -->
+<div id="page-quiz" class="page">
+  <div class="ph"><div class="ph-title">Uji Pemahamanmu</div><div class="ph-desc">10 soal dari materi playbook — campuran pilihan ganda dan benar/salah. Tidak ada yang dikirim ke mana pun, hasilnya hanya untuk kamu sendiri.</div></div>
+
+  <div id="quiz-container">
+    <div class="prog-bar"><div class="prog-fill" id="quiz-prog" style="width:0%"></div></div>
+    <div class="prog-txt" id="quiz-prog-txt">Soal 0 dari 10</div>
+
+    <div id="quiz-question-box" style="margin-top:16px"></div>
+
+    <div style="display:flex;gap:10px;margin-top:20px;align-items:center">
+      <button id="quiz-submit" onclick="quizSubmit()" style="padding:8px 24px;background:var(--text);color:var(--surface);border:none;border-radius:20px;cursor:pointer;font-size:13px;font-family:var(--sans);font-weight:500">Cek jawaban</button>
+      <button id="quiz-next" onclick="quizNext()" style="display:none;padding:8px 24px;background:none;border:1px solid var(--border2);border-radius:20px;cursor:pointer;font-size:13px;font-family:var(--sans);color:var(--text2)">Soal berikutnya →</button>
+      <span id="quiz-feedback" style="font-size:13px;font-weight:500"></span>
+    </div>
+  </div>
+
+  <div id="quiz-result" style="display:none;margin-top:16px">
+    <div class="card" style="text-align:center;padding:28px">
+      <div id="quiz-score-emoji" style="font-size:40px;margin-bottom:8px"></div>
+      <div id="quiz-score-text" style="font-size:20px;font-weight:600;margin-bottom:6px"></div>
+      <div id="quiz-score-sub" style="font-size:13px;color:var(--text2);margin-bottom:20px"></div>
+      <button onclick="quizRestart()" style="padding:8px 24px;background:var(--text);color:var(--surface);border:none;border-radius:20px;cursor:pointer;font-size:13px;font-family:var(--sans);font-weight:500">Coba lagi</button>
+    </div>
+    <div id="quiz-review" style="margin-top:16px;display:grid;gap:8px"></div>
+  </div>
+</div>
+
 </main>
 </div>
 
@@ -3985,6 +4024,7 @@ function nav(id, el) {
   document.getElementById('page-' + id).classList.add('active');
   el.classList.add('active');
   window.scrollTo(0, 0);
+  if (id === 'quiz' && quizAnswers.length === 0 && quizIdx === 0) quizRender();
 }
 
 // tabs
@@ -4028,6 +4068,194 @@ function resetCL() {
   tick();
 }
 
+// ── Quiz ─────────────────────────────────────────────────────
+const QUIZ = [
+  {
+    q: 'Notebook sudah jalan dari atas ke bawah tanpa error tadi pagi. Siang sempat edit sel ke-3 untuk coba visualisasi baru, hasilnya kurang bagus lalu dihapus lagi. Sekarang mau dikirim ke tim. Apa yang harus dilakukan?',
+    opts: [
+      'Langsung kirim — tadi pagi sudah jalan full dan perubahannya sudah dihapus',
+      'Restart kernel dulu, Run All ulang dari awal — edit apapun bisa meninggalkan state tersembunyi di memory',
+      'Jalankan hanya sel yang sempat diubah untuk verifikasi',
+      'Simpan file lalu cek ukurannya — kalau ukuran wajar berarti aman'
+    ],
+    ans: 1
+  },
+  {
+    q: 'GCP_PROJECT_ID tidak boleh hardcode di notebook. Mana cara penyimpanan yang benar?',
+    opts: [
+      'Simpan di config.yaml lalu commit ke Git',
+      'Simpan di comments di atas notebook: # project_id = nama-project',
+      'Simpan di .env, baca dengan os.getenv(), dan pastikan .env ada di .gitignore',
+      'Simpan di variabel global di sel pertama notebook'
+    ],
+    ans: 2
+  },
+  {
+    q: 'Data time series penjualan harian punya gap 9 hari berturut-turut di bulan Maret karena migrasi sistem. Kolom "revenue" diisi ffill() tanpa limit. Apa dampaknya ke model?',
+    opts: [
+      'Tidak ada dampak — ffill() adalah standar untuk time series',
+      'Model akan belajar bahwa revenue stabil selama 9 hari padahal itu data palsu, pola tren dan musiman di periode itu jadi rusak',
+      'ffill() otomatis berhenti kalau gap lebih dari 3 hari',
+      'Dampaknya kecil karena hanya 9 dari ratusan titik data'
+    ],
+    ans: 1
+  },
+  {
+    q: 'Model LightGBM menghasilkan AUC 0.84 di test set dan AUC 0.91 di training set. Apa kesimpulan yang paling tepat?',
+    opts: [
+      'Model sudah bagus, selisih 0.07 masih dalam batas wajar untuk semua kasus',
+      'Ada indikasi overfitting — perlu dicek lebih lanjut dan didiskusikan sebelum lanjut ke production',
+      'Model underfit karena AUC test tidak mencapai 0.9',
+      'AUC training tidak relevan, yang penting AUC test sudah 0.84'
+    ],
+    ans: 1
+  },
+  {
+    q: 'Kolom "pendapatan_bulanan" punya 38% missing value. Bisnis meminta kolom ini tetap dipakai. Pendekatan mana yang paling tepat?',
+    opts: [
+      'Impute dengan median karena missing di bawah 50%',
+      'Hapus kolomnya karena missing terlalu tinggi',
+      'Tambah flag indicator "pendapatan_missing", lalu impute nilainya — model bisa belajar dari pola missing itu sendiri',
+      'Isi dengan 0 supaya tidak ada NaN'
+    ],
+    ans: 2
+  },
+  {
+    q: 'Feature importance LightGBM menunjukkan "recency" adalah feature paling penting dengan skor 0.31. Apa yang bisa disimpulkan dari angka ini?',
+    opts: [
+      'Recency berpengaruh positif terhadap prediksi — semakin tinggi recency, semakin tinggi prediksi',
+      'Recency sering dipakai model untuk memisahkan data, tapi arahnya (positif/negatif) tidak bisa diketahui dari feature importance saja',
+      'Recency menyebabkan churn — ini bisa langsung dikomunikasikan ke klien',
+      'Feature lain tidak relevan karena skornya jauh di bawah 0.31'
+    ],
+    ans: 1
+  },
+  {
+    q: 'model.pkl sudah disimpan dengan joblib. Saat DE load model dan predict pakai semua kolom yang ada di data baru, tidak ada error. Tapi hasil prediksinya aneh. Apa yang paling mungkin menjadi penyebabnya?',
+    opts: [
+      'Model.pkl rusak saat proses simpan',
+      'DE pakai kolom yang berbeda nama atau urutan dari yang dipakai saat training — model silent wrong prediction tanpa error',
+      'LightGBM tidak kompatibel dengan versi Python DE',
+      'Data baru terlalu berbeda dari data training'
+    ],
+    ans: 1
+  },
+  {
+    q: 'Senior minta kamu commit notebook EDA yang baru selesai. Sebelum commit, kamu lihat git status menampilkan: data/raw/transaksi.csv dan .env ikut terdeteksi. Apa yang harus dilakukan?',
+    opts: [
+      'Commit semua sekaligus supaya cepat',
+      'Tambahkan data/raw/ dan .env ke .gitignore dulu, verifikasi git status, baru commit hanya notebook-nya',
+      'Hapus file CSV dan .env dari folder sebelum commit',
+      'Commit saja, nanti bisa di-delete dari Git history'
+    ],
+    ans: 1
+  },
+  {
+    q: 'run_pipeline.py kamu jalan lancar di laptop. Saat DE coba jalankan di server, muncul error "FileNotFoundError: /Users/Budi/Desktop/model.pkl". Apa penyebabnya?',
+    opts: [
+      'Server DE punya bug Python',
+      'File model.pkl terlalu besar untuk di-copy ke server',
+      'Ada path absolut ke folder laptop yang hardcode di kode — tidak bisa jalan di environment lain',
+      'DE salah install requirements.txt'
+    ],
+    ans: 2
+  },
+  {
+    q: 'Handoff ke DE sudah selesai dan DE bilang "sudah bisa jalankan pipeline-nya". Besok pagi kamu ganti nama kolom output dari pred_proba menjadi churn_score di last minute karena permintaan klien, lalu push ke Git tanpa bilang DE. Apa yang akan terjadi?',
+    opts: [
+      'Tidak ada masalah — DE tinggal pull perubahan terbaru',
+      'Pipeline DE akan error atau menghasilkan output yang salah karena nama kolom yang di-expect tidak ada, dan DE tidak tahu ada perubahan',
+      'Hanya bermasalah kalau DE tidak pull sebelum jalankan',
+      'DE pasti langsung tahu karena Git otomatis notifikasi'
+    ],
+    ans: 1
+  }
+];
+
+let quizIdx = 0, quizScore = 0, quizAnswers = [], quizLocked = false;
+
+function quizRender() {
+  const q = QUIZ[quizIdx];
+  document.getElementById('quiz-prog').style.width = (quizIdx / QUIZ.length * 100) + '%';
+  document.getElementById('quiz-prog-txt').textContent = `Soal ${quizIdx + 1} dari ${QUIZ.length}`;
+  document.getElementById('quiz-feedback').textContent = '';
+  document.getElementById('quiz-submit').style.display = 'inline-block';
+  document.getElementById('quiz-next').style.display = 'none';
+  quizLocked = false;
+
+  const box = document.getElementById('quiz-question-box');
+  box.innerHTML = `
+    <div class="quiz-q-label">Soal ${quizIdx + 1}</div>
+    <div class="quiz-q-text">${q.q}</div>
+    ${q.opts.map((o, i) => `
+      <div class="quiz-opt" id="qopt-${i}" onclick="quizSelect(${i})">
+        <input type="radio" name="quiz" id="qr-${i}">
+        <label for="qr-${i}" style="cursor:pointer">${o}</label>
+      </div>`).join('')}`;
+}
+
+function quizSelect(i) {
+  if (quizLocked) return;
+  document.querySelectorAll('.quiz-opt').forEach(el => el.classList.remove('selected'));
+  document.getElementById(`qopt-${i}`).classList.add('selected');
+  document.getElementById(`qr-${i}`).checked = true;
+}
+
+function quizSubmit() {
+  const checked = document.querySelector('.quiz-opt.selected');
+  if (!checked) { document.getElementById('quiz-feedback').textContent = '← Pilih salah satu dulu'; return; }
+  quizLocked = true;
+  const chosen = parseInt(checked.id.split('-')[1]);
+  const correct = QUIZ[quizIdx].ans;
+  quizAnswers.push({ q: QUIZ[quizIdx].q, opts: QUIZ[quizIdx].opts, chosen, correct });
+  if (chosen === correct) {
+    quizScore++;
+    document.getElementById(`qopt-${chosen}`).classList.add('correct');
+    document.getElementById('quiz-feedback').style.color = 'var(--green)';
+    document.getElementById('quiz-feedback').textContent = '✓ Benar!';
+  } else {
+    document.getElementById(`qopt-${chosen}`).classList.add('wrong');
+    document.getElementById(`qopt-${correct}`).classList.add('correct');
+    document.getElementById('quiz-feedback').style.color = 'var(--red)';
+    document.getElementById('quiz-feedback').textContent = '✗ Kurang tepat';
+  }
+  document.getElementById('quiz-submit').style.display = 'none';
+  document.getElementById('quiz-next').style.display = 'inline-block';
+  document.getElementById('quiz-next').textContent = quizIdx < QUIZ.length - 1 ? 'Soal berikutnya →' : 'Lihat hasil →';
+}
+
+function quizNext() {
+  quizIdx++;
+  if (quizIdx < QUIZ.length) { quizRender(); return; }
+  // show result
+  document.getElementById('quiz-container').style.display = 'none';
+  document.getElementById('quiz-result').style.display = 'block';
+  const pct = quizScore / QUIZ.length;
+  const emoji = pct === 1 ? '🏆' : pct >= 0.8 ? '🎉' : pct >= 0.6 ? '📚' : '💪';
+  const label = pct === 1 ? 'Sempurna!' : pct >= 0.8 ? 'Bagus sekali!' : pct >= 0.6 ? 'Lumayan — masih ada yang perlu dicek' : 'Masih perlu baca lagi nih';
+  const sub   = pct >= 0.8 ? 'Kamu sudah paham standar kerja tim dengan baik.' : 'Review bagian yang jawabannya merah di bawah, lalu coba lagi.';
+  document.getElementById('quiz-score-emoji').textContent = emoji;
+  document.getElementById('quiz-score-text').textContent = `${quizScore} / ${QUIZ.length} benar — ${label}`;
+  document.getElementById('quiz-score-sub').textContent = sub;
+
+  const rev = document.getElementById('quiz-review');
+  rev.innerHTML = quizAnswers.map((a, i) => `
+    <div style="border:1px solid ${a.chosen===a.correct?'var(--green-bd)':'var(--red-bd)'};background:${a.chosen===a.correct?'var(--green-bg)':'var(--red-bg)'};border-radius:var(--r);padding:12px 14px">
+      <div style="font-size:11px;font-weight:600;color:${a.chosen===a.correct?'var(--green)':'var(--red)'};margin-bottom:4px">Soal ${i+1} — ${a.chosen===a.correct?'✓ Benar':'✗ Salah'}</div>
+      <div style="font-size:13px;color:var(--text);margin-bottom:8px">${a.q}</div>
+      ${a.chosen!==a.correct?`<div style="font-size:12px;color:var(--red);margin-bottom:4px">Jawabanmu: ${a.opts[a.chosen]}</div>`:''}
+      <div style="font-size:12px;color:var(--green)">Jawaban benar: ${a.opts[a.correct]}</div>
+    </div>`).join('');
+}
+
+function quizRestart() {
+  quizIdx = 0; quizScore = 0; quizAnswers = [];
+  document.getElementById('quiz-container').style.display = 'block';
+  document.getElementById('quiz-result').style.display = 'none';
+  quizRender();
+}
+
+// init quiz when page shown
 // dark mode
 function toggleTheme() {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
