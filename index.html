@@ -3996,8 +3996,7 @@ Berlaku sejak  : sekarang
     <div id="quiz-question-box" style="margin-top:16px"></div>
 
     <div style="display:flex;gap:10px;margin-top:20px;align-items:center">
-      <button id="quiz-submit" onclick="quizSubmit()" style="padding:8px 24px;background:var(--text);color:var(--surface);border:none;border-radius:20px;cursor:pointer;font-size:13px;font-family:var(--sans);font-weight:500">Cek jawaban</button>
-      <button id="quiz-next" onclick="quizNext()" style="display:none;padding:8px 24px;background:none;border:1px solid var(--border2);border-radius:20px;cursor:pointer;font-size:13px;font-family:var(--sans);color:var(--text2)">Soal berikutnya →</button>
+      <button id="quiz-next" onclick="quizNext()" style="padding:8px 24px;background:var(--text);color:var(--surface);border:none;border-radius:20px;cursor:pointer;font-size:13px;font-family:var(--sans);font-weight:500">Soal berikutnya →</button>
       <span id="quiz-feedback" style="font-size:13px;font-weight:500"></span>
     </div>
   </div>
@@ -4172,16 +4171,14 @@ const QUIZ = [
   }
 ];
 
-let quizIdx = 0, quizScore = 0, quizAnswers = [], quizLocked = false;
+let quizIdx = 0, quizScore = 0, quizAnswers = [];
 
 function quizRender() {
   const q = QUIZ[quizIdx];
   document.getElementById('quiz-prog').style.width = (quizIdx / QUIZ.length * 100) + '%';
   document.getElementById('quiz-prog-txt').textContent = `Soal ${quizIdx + 1} dari ${QUIZ.length}`;
   document.getElementById('quiz-feedback').textContent = '';
-  document.getElementById('quiz-submit').style.display = 'inline-block';
-  document.getElementById('quiz-next').style.display = 'none';
-  quizLocked = false;
+  document.getElementById('quiz-next').textContent = quizIdx < QUIZ.length - 1 ? 'Soal berikutnya →' : 'Lihat hasil →';
 
   const box = document.getElementById('quiz-question-box');
   box.innerHTML = `
@@ -4195,36 +4192,18 @@ function quizRender() {
 }
 
 function quizSelect(i) {
-  if (quizLocked) return;
   document.querySelectorAll('.quiz-opt').forEach(el => el.classList.remove('selected'));
   document.getElementById(`qopt-${i}`).classList.add('selected');
   document.getElementById(`qr-${i}`).checked = true;
 }
 
-function quizSubmit() {
+function quizNext() {
   const checked = document.querySelector('.quiz-opt.selected');
   if (!checked) { document.getElementById('quiz-feedback').textContent = '← Pilih salah satu dulu'; return; }
-  quizLocked = true;
   const chosen = parseInt(checked.id.split('-')[1]);
   const correct = QUIZ[quizIdx].ans;
   quizAnswers.push({ q: QUIZ[quizIdx].q, opts: QUIZ[quizIdx].opts, chosen, correct });
-  if (chosen === correct) {
-    quizScore++;
-    document.getElementById(`qopt-${chosen}`).classList.add('correct');
-    document.getElementById('quiz-feedback').style.color = 'var(--green)';
-    document.getElementById('quiz-feedback').textContent = '✓ Benar!';
-  } else {
-    document.getElementById(`qopt-${chosen}`).classList.add('wrong');
-    document.getElementById(`qopt-${correct}`).classList.add('correct');
-    document.getElementById('quiz-feedback').style.color = 'var(--red)';
-    document.getElementById('quiz-feedback').textContent = '✗ Kurang tepat';
-  }
-  document.getElementById('quiz-submit').style.display = 'none';
-  document.getElementById('quiz-next').style.display = 'inline-block';
-  document.getElementById('quiz-next').textContent = quizIdx < QUIZ.length - 1 ? 'Soal berikutnya →' : 'Lihat hasil →';
-}
-
-function quizNext() {
+  if (chosen === correct) quizScore++;
   quizIdx++;
   if (quizIdx < QUIZ.length) { quizRender(); return; }
   // show result
