@@ -118,6 +118,7 @@ code { padding:1px 5px; display:inline; vertical-align:baseline }
 
 /* ── two-col ─────────────────────────────── */
 .two-col { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px }
+.two-col > * { min-width:0 }
 .col-label { font-size:11px; font-weight:600; letter-spacing:.05em;
              text-transform:uppercase; color:var(--text3); margin-bottom:5px }
 
@@ -231,6 +232,7 @@ tr:last-child td { border-bottom:none }
     <a class="nav-item" onclick="nav('notebook',this)"><span class="nav-ico">⊞</span>Notebook</a>
     <a class="nav-item" onclick="nav('python',this)"><span class="nav-ico">{}</span>Python / .py</a>
     <a class="nav-item" onclick="nav('config',this)"><span class="nav-ico">⚙</span>Config &amp; secret</a>
+    <a class="nav-item" onclick="nav('deps',this)"><span class="nav-ico">≡</span>README &amp; Requirements</a>
     <a class="nav-item" onclick="nav('git',this)"><span class="nav-ico">⑂</span>Git dasar</a>
   </div>
   <div class="nav-group">
@@ -248,6 +250,7 @@ tr:last-child td { border-bottom:none }
     <a class="nav-item" onclick="nav('errlog',this)"><span class="nav-ico">⊡</span>Error &amp; Logging</a>
     <a class="nav-item" onclick="nav('maturity',this)"><span class="nav-ico">▲</span>Pipeline Maturity</a>
     <a class="nav-item" onclick="nav('handoff',this)"><span class="nav-ico">→</span>Handoff ke DE</a>
+    <a class="nav-item" onclick="nav('change',this)"><span class="nav-ico">↻</span>Perubahan setelah Live</a>
   </div>
   <div class="nav-group">
     <span class="nav-label">Tim</span>
@@ -820,6 +823,7 @@ pip freeze &gt; requirements.txt</pre><button class="copy-btn" onclick="cp(this)
 pip install google-cloud-bigquery google-cloud-storage `
             db-dtypes python-dotenv pyyaml
 pip freeze &gt; requirements.txt</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+        <div class="callout tip" style="margin-top:10px"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Kerja bareng tim atau akan handoff ke DE?</div><div class="c-text">Pakai virtual environment per project dan kunci versi library di requirements.txt supaya semua orang memakai versi yang sama. Lihat <a href="#" onclick="goto('deps');return false" style="color:inherit">README &amp; Requirements</a>.</div></div></div>
       </div></div></li>
       <li><div class="step-num">6</div><div class="step-body"><div class="step-title">Init Git &amp; mulai coding</div><div class="step-desc">
         <div class="os-tabs">
@@ -903,9 +907,9 @@ revenue_share = revenue_per_region / total_revenue</pre>
         <div><div class="col-label">✅ Benar</div><pre>202501_tokopedia_churn
 202503_bankbca_fraud_detection
 202411_internal_hr_attrition</pre></div>
-        <div><div class="col-label">❌ Hindari</div><pre>project_baru          ← tidak ada konteks waktu/klien
-analisis tokopedia    ← ada spasi
-DS_Project_Final      ← huruf kapital + "Final" = anti-pattern</pre></div>
+        <div><div class="col-label">❌ Hindari</div><pre>project_baru        ← tanpa waktu/klien
+analisis tokopedia  ← ada spasi
+DS_Project_Final    ← kapital + "Final"</pre></div>
       </div>
     </div>
   </div>
@@ -1533,6 +1537,230 @@ client = bigquery.Client(project=project_id)</pre><button class="copy-btn" oncli
     </div>
 
     <div class="callout tip" style="margin-top:10px"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Alternatif lebih aman di DGX — Application Default Credentials</div><div class="c-text">Kalau kamu kerja di DGX dan sudah login ke gcloud, tidak perlu file .json sama sekali. Jalankan sekali di terminal, Python otomatis tahu siapa kamu.<pre style="margin-top:6px">gcloud auth application-default login</pre></div></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ README & REQUIREMENTS -->
+<div id="page-deps" class="page">
+  <div class="ph"><div class="ph-title">README &amp; Requirements</div><div class="ph-desc">Dua file yang menentukan apakah orang lain bisa menjalankan project-mu tanpa bertanya. README menjelaskan <em>apa</em> dan <em>bagaimana</em>, requirements.txt memastikan semua orang memakai library dengan versi yang sama.</div></div>
+
+  <div class="section">
+    <div class="section-title">Kenapa dua file ini penting?</div>
+    <div class="two-col">
+      <div class="card" style="margin:0">
+        <div class="card-title">README.md — "buku manual" project</div>
+        <div class="card-desc">Orang pertama yang membuka folder project (senior, DE, rekan yang menggantikanmu, atau kamu sendiri 6 bulan lagi) akan membaca README. Tanpa README, mereka harus menebak notebook mana yang dijalankan duluan dan data diambil dari mana.</div>
+      </div>
+      <div class="card" style="margin:0">
+        <div class="card-title">requirements.txt — "resep" environment</div>
+        <div class="card-desc">Daftar library beserta versinya. Kode yang sama bisa memberi hasil berbeda, atau malah error, kalau dijalankan dengan versi pandas / scikit-learn yang berbeda.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">README.md — isi minimal</div>
+    <table>
+      <tr><th>Bagian</th><th>Isi</th><th>Wajib?</th></tr>
+      <tr><td><strong>Tujuan</strong></td><td>1–2 kalimat: pertanyaan bisnis yang dijawab dan output akhirnya</td><td>Wajib</td></tr>
+      <tr><td><strong>Sumber data</strong></td><td>Tabel BQ / file CSV, periode data, siapa pemilik datanya</td><td>Wajib</td></tr>
+      <tr><td><strong>Setup environment</strong></td><td>Versi Python, cara buat venv, <code>pip install -r requirements.txt</code>, isi <code>.env</code></td><td>Wajib</td></tr>
+      <tr><td><strong>Cara menjalankan</strong></td><td>Urutan notebook atau perintah <code>run_pipeline.py</code></td><td>Wajib</td></tr>
+      <tr><td><strong>Struktur folder</strong></td><td>Penjelasan singkat tiap folder utama</td><td>Wajib</td></tr>
+      <tr><td><strong>Output</strong></td><td>File / tabel yang dihasilkan dan lokasinya</td><td>Wajib</td></tr>
+      <tr><td><strong>Kontak &amp; status</strong></td><td>PIC, tanggal update terakhir, status (development / live / selesai)</td><td>Wajib</td></tr>
+      <tr><td><strong>Limitasi &amp; asumsi</strong></td><td>Hal yang perlu diketahui pembaca sebelum memakai hasil</td><td>Disarankan</td></tr>
+      <tr><td><strong>Riwayat perubahan</strong></td><td>Link ke <code>CHANGELOG.md</code> kalau project sudah live</td><td>Kalau live</td></tr>
+    </table>
+    <div class="code-wrap"><pre># 202501_tokopedia_churn
+
+## Tujuan
+Memprediksi pelanggan yang berisiko churn dalam 30 hari ke depan,
+untuk dipakai tim CRM sebagai target campaign retensi.
+Output: skor churn per user → BQ `ds_results.tokopedia_churn_predictions`.
+
+## Sumber data
+| Sumber                        | Periode             | Pemilik     |
+|-------------------------------|---------------------|-------------|
+| BQ `analytics.transactions`   | Jan 2023 – Des 2024 | DE - [Nama] |
+| BQ `analytics.customers`      | snapshot bulanan    | DE - [Nama] |
+
+## Setup environment
+- Python 3.10 (cek: `python --version`)
+```bash
+python -m venv venv
+source venv/bin/activate          # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env              # lalu isi nilainya
+```
+
+## Cara menjalankan
+1. `notebooks/01_eda_churn.ipynb` — eksplorasi (opsional, tidak wajib di-run ulang)
+2. `notebooks/02_feature_engineering_churn.ipynb`
+3. `notebooks/03_modelling_churn.ipynb`
+4. Pipeline produksi: `python pipeline/run_pipeline.py --config config/config.yaml`
+
+## Struktur folder
+- `notebooks/` — analisis &amp; eksperimen, urut berdasarkan nomor
+- `src/` — fungsi yang dipakai ulang
+- `pipeline/` — script yang dijalankan DE
+- `config/` — parameter (tanpa credentials)
+- `outputs/` — model, hasil prediksi, report
+
+## Output
+- Model: `outputs/models/model_latest.pkl` + `feature_cols.json`
+- Prediksi: BQ `ds_results.tokopedia_churn_predictions`
+
+## Limitasi &amp; asumsi
+- User baru (&lt; 30 hari) tidak diprediksi karena histori belum cukup
+
+## Kontak &amp; status
+- PIC: [Nama] — [email@perusahaan.com]
+- Status: live sejak 2025-03-01 (lihat CHANGELOG.md)
+- Terakhir diperbarui: 2025-03-15</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    <div class="callout tip"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">README ditulis sejak hari pertama, bukan di akhir</div><div class="c-text">Isi bagian Tujuan &amp; Sumber data saat project dimulai (bisa diambil dari template brief), lalu lengkapi sambil jalan. Menulis README di akhir project = banyak detail yang sudah lupa.</div></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">requirements.txt — detail yang benar</div>
+    <div class="card">
+      <div class="card-title">Aturan utama: versi selalu dikunci dengan <code>==</code></div>
+      <div class="card-desc" style="margin-bottom:10px">Tanpa versi, <code>pip install</code> akan mengambil versi <em>terbaru</em> saat itu. Hari ini kamu pakai pandas 2.1, tiga bulan lagi DE meng-install pandas 2.3 — hasil bisa berbeda tanpa ada yang sadar.</div>
+      <div class="two-col">
+        <div><div class="col-label">✅ Benar</div><pre>pandas==2.2.2
+scikit-learn==1.4.2
+lightgbm==4.3.0</pre></div>
+        <div><div class="col-label">❌ Hindari</div><pre>pandas          ← versi bebas
+scikit-learn&gt;=1.0  ← terlalu longgar
+lightgbm        ← versi bebas</pre></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Contoh requirements.txt yang rapi</div>
+      <div class="card-desc" style="margin-bottom:10px">Dikelompokkan dengan komentar, dan versi Python dicatat di baris paling atas supaya pembaca langsung tahu.</div>
+      <div class="code-wrap"><pre># Python 3.10
+# Update terakhir: 2025-03-15 oleh [Nama]
+
+# ── Data processing
+pandas==2.2.2
+numpy==1.26.4
+pyarrow==15.0.2
+
+# ── Modelling
+scikit-learn==1.4.2
+lightgbm==4.3.0
+joblib==1.4.0
+
+# ── GCP
+google-cloud-bigquery==3.20.1
+google-cloud-storage==2.16.0
+db-dtypes==1.2.0
+
+# ── Utilitas
+python-dotenv==1.0.1
+pyyaml==6.0.1</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><code>pip freeze</code> atau tulis manual?</div>
+      <table style="margin:8px 0 0">
+        <tr><th>Cara</th><th>Kapan dipakai</th><th>Catatan</th></tr>
+        <tr><td><code>pip freeze &gt; requirements.txt</code></td><td>Kalau kamu pakai <strong>venv khusus project ini</strong></td><td>Hasilnya bersih — hanya library project ini, versi sudah terkunci otomatis</td></tr>
+        <tr><td>Tulis manual + cek versi</td><td>Kalau install di environment bersama (mis. <code>pip install --user</code> di DGX)</td><td><code>pip freeze</code> di sini akan berisi ratusan library dari project lain — tulis hanya yang di-<code>import</code> di kode, versinya ambil dari <code>pip show</code></td></tr>
+      </table>
+      <div class="code-wrap"><pre># Cek versi library yang sedang terpasang
+pip show pandas scikit-learn lightgbm | grep -E "Name|Version"     # Mac / Linux
+pip show pandas scikit-learn lightgbm | Select-String "Name|Version"  # Windows
+
+# Atau langsung dari Python / notebook
+python -c "import pandas, sklearn; print(pandas.__version__, sklearn.__version__)"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    </div>
+
+    <div class="callout warn"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Setiap kali install library baru → update requirements.txt saat itu juga</div><div class="c-text">Jangan tunggu akhir project. Library yang di-install di tengah jalan lalu lupa dicatat adalah penyebab paling umum <code>ModuleNotFoundError</code> saat handoff ke DE.</div></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Menyamakan versi library di tim</div>
+    <div class="callout tip"><div class="c-icon">💡</div><div class="c-body"><div class="c-label">Prinsip: requirements.txt di Git adalah satu-satunya acuan</div><div class="c-text">Bukan "versi di laptop senior" atau "versi yang ada di DGX". Semua anggota tim (dan DE) meng-install dari file yang sama, dan tidak ada yang mengubah versi library tanpa meng-update file tersebut.</div></div></div>
+
+    <ol class="steps">
+      <li><div class="step-num">1</div><div class="step-body"><div class="step-title">Samakan versi Python dulu</div><div class="step-desc">Versi library yang sama bisa berperilaku beda di Python yang berbeda, dan beberapa versi library hanya tersedia untuk Python tertentu. Cek dengan <code>python --version</code> dan cocokkan dengan baris pertama requirements.txt.</div></div></li>
+      <li><div class="step-num">2</div><div class="step-body"><div class="step-title">Buat virtual environment per project</div><div class="step-desc">
+        <div style="margin-bottom:8px">venv = folder berisi Python + library khusus untuk satu project. Upgrade library di project A tidak akan merusak project B. Tidak butuh <code>sudo</code>, jadi aman dipakai di DGX.</div>
+        <div class="os-tabs">
+          <button class="os-btn active" onclick="ostab('cmdv1','mac',this)">Mac / Linux</button>
+          <button class="os-btn" onclick="ostab('cmdv1','win',this)">Windows</button>
+        </div>
+        <div id="cmdv1-mac" class="os-panel active"><div class="code-wrap"><pre>cd /workspace/202501_tokopedia_churn
+python3 -m venv venv
+source venv/bin/activate           # tanda (venv) muncul di awal baris terminal</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+        <div id="cmdv1-win" class="os-panel"><div class="code-wrap"><pre>cd C:\workspace\202501_tokopedia_churn
+python -m venv venv
+venv\Scripts\activate              # tanda (venv) muncul di awal baris terminal</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div></div>
+        <div style="margin-top:6px">Folder <code>venv/</code> sudah ada di <code>.gitignore</code> — jangan di-commit, setiap orang membuat venv sendiri.</div>
+      </div></div></li>
+      <li><div class="step-num">3</div><div class="step-body"><div class="step-title">Install dari requirements.txt</div><div class="step-desc">
+        <div class="code-wrap"><pre>pip install -r requirements.txt</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+        Pakai venv yang sama sebagai kernel di Jupyter / VSCode supaya notebook juga memakai versi ini:
+        <div class="code-wrap"><pre>pip install ipykernel
+python -m ipykernel install --user --name 202501_tokopedia_churn</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+        Lalu pilih kernel <code>202501_tokopedia_churn</code> di notebook.
+      </div></div></li>
+      <li><div class="step-num">4</div><div class="step-body"><div class="step-title">Verifikasi — versi terpasang sudah sesuai?</div><div class="step-desc">
+        Simpan sebagai <code>src/check_env.py</code>, jalankan setiap kali setup ulang atau sebelum handoff:
+        <div class="code-wrap"><pre>"""Bandingkan versi library terpasang dengan requirements.txt."""
+import sys
+from importlib.metadata import version, PackageNotFoundError
+from pathlib import Path
+
+req_file = Path(__file__).resolve().parents[1] / 'requirements.txt'
+print(f"Python {sys.version.split()[0]}")
+
+mismatch = 0
+for line in req_file.read_text().splitlines():
+    line = line.split('#')[0].strip()
+    if '==' not in line:
+        continue
+    name, expected = line.split('==')
+    try:
+        installed = version(name)
+    except PackageNotFoundError:
+        installed = 'TIDAK ADA'
+    if installed != expected:
+        mismatch += 1
+        print(f"✗ {name}: requirements {expected}, terpasang {installed}")
+
+print("✓ Semua versi sesuai" if mismatch == 0 else f"{mismatch} library tidak sesuai — jalankan: pip install -r requirements.txt")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      </div></div></li>
+    </ol>
+
+    <div class="card" style="margin-top:12px">
+      <div class="card-title">Mau upgrade atau menambah library? Ikuti alur ini</div>
+      <div class="card-desc">
+        <ol style="margin:6px 0 0 18px;display:grid;gap:4px">
+          <li>Diskusikan dulu dengan tim — terutama kalau project sudah live</li>
+          <li>Buat branch, mis. <code>update/upgrade-pandas-budi</code></li>
+          <li>Install versi baru, ubah baris di requirements.txt</li>
+          <li>Test: notebook <strong>Restart &amp; Run All</strong>, <code>run_pipeline.py</code> jalan, dan angka output tidak berubah tanpa alasan</li>
+          <li>Commit: <code>update: pandas 2.1.4 → 2.2.2</code>, lalu merge</li>
+          <li>Kabari tim: <em>"requirements.txt berubah, jalankan <code>pip install -r requirements.txt</code> setelah pull"</em></li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Gejala yang biasanya disebabkan versi library berbeda</div>
+      <table style="margin:8px 0 0">
+        <tr><th>Gejala</th><th>Penyebab yang sering</th></tr>
+        <tr><td><code>InconsistentVersionWarning</code> atau error saat <code>joblib.load()</code> model</td><td>Model di-training dengan scikit-learn versi lain dari yang dipakai untuk load</td></tr>
+        <tr><td>Notebook jalan di kamu, error di rekan dengan <code>AttributeError</code></td><td>Fungsi sudah dihapus / di-rename di versi library yang lebih baru</td></tr>
+        <tr><td>Angka hasil sedikit berbeda antar orang padahal kode &amp; data sama</td><td>Default parameter berubah antar versi (sering terjadi di pandas &amp; scikit-learn)</td></tr>
+        <tr><td>Error terkait <code>numpy</code> saat import library lain</td><td>Library di-compile untuk numpy versi lain (mis. numpy 2.x vs 1.x)</td></tr>
+      </table>
+    </div>
+
+    <div class="callout warn"><div class="c-icon">⚠️</div><div class="c-body"><div class="c-label">Model yang disimpan terikat dengan versi library saat training</div><div class="c-text">File <code>.pkl</code> harus di-load dengan versi scikit-learn / LightGBM yang sama. Catat versinya di <code>meta_[run_id].json</code> (lihat halaman Versioning), mis. <code>'sklearn_version': sklearn.__version__</code>, supaya bisa ditelusuri kalau model gagal di-load.</div></div></div>
   </div>
 </div>
 
@@ -3241,6 +3469,7 @@ python -c "import pandas, sklearn, joblib, yaml, google.cloud.bigquery; print('�
 
 # Cek versi yang dipakai (penting untuk reproduksi)
 pip show pandas scikit-learn lightgbm | grep -E "Name|Version"</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <div class="card-desc" style="margin-top:6px">Pastikan semua versi dikunci dengan <code>==</code>. Detail format &amp; cara menyamakan versi: <a href="#" onclick="goto('deps');return false" style="color:inherit">README &amp; Requirements</a>.</div>
     </div>
 
     <div class="card" style="margin-bottom:8px">
@@ -3314,7 +3543,7 @@ Estimasi durasi: ~15 menit. Tidak perlu input manual — jalankan dan tunggu.
     </div>
     <div class="card" style="margin-bottom:8px">
       <div class="card-title">❌ Format output berubah di menit terakhir tanpa bilang DE</div>
-      <div class="card-desc">DS ganti nama kolom atau tambah kolom baru tanpa konfirmasi DE → pipeline DE yang sudah di-setup langsung rusak. Setiap perubahan format output harus dikomunikasikan ke DE <em>sebelum</em> dieksekusi.</div>
+      <div class="card-desc">DS ganti nama kolom atau tambah kolom baru tanpa konfirmasi DE → pipeline DE yang sudah di-setup langsung rusak. Setiap perubahan format output harus dikomunikasikan ke DE <em>sebelum</em> dieksekusi. Setelah pipeline live, ikuti alur di <a href="#" onclick="goto('change');return false" style="color:inherit">Perubahan setelah Live</a>.</div>
     </div>
     <div class="card" style="margin-bottom:8px">
       <div class="card-title">❌ handoff_notes.md tidak ada atau hanya setengah isi</div>
@@ -3339,6 +3568,142 @@ Estimasi durasi: ~15 menit. Tidak perlu input manual — jalankan dan tunggu.
         <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span><strong>Tidak ada path absolut</strong> ke folder laptop di kode pipeline</span></label>
         <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span><strong>Logging sudah jelas</strong> — DE bisa tahu pipeline sukses atau gagal hanya dari log</span></label>
         <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span>Ada <strong>waktu untuk pendampingan DE</strong> di run pertama di environment mereka</span></label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ CHANGE AFTER LIVE -->
+<div id="page-change" class="page">
+  <div class="ph"><div class="ph-title">Perubahan setelah Live</div><div class="ph-desc">Setelah project masuk tahap operate, output-nya sudah dipakai orang lain — pipeline DE, dashboard, atau keputusan bisnis klien. Perubahan sekecil apa pun harus lewat alur yang jelas supaya tidak ada yang rusak diam-diam.</div></div>
+
+  <div class="section">
+    <div class="section-title">Kenapa perlu alur khusus?</div>
+    <div class="card">
+      <div class="card-title">Analogi: renovasi rumah yang sudah ditempati</div>
+      <div class="card-desc">Saat membangun, kamu bebas bongkar pasang. Setelah ada penghuninya, mengganti pipa air harus dijadwalkan, penghuni dikabari, dan ada rencana kalau ternyata bocor. Project yang sudah live sama: ada "penghuni" yang bergantung pada output-mu.</div>
+    </div>
+    <div class="callout dont"><div class="c-icon">❌</div><div class="c-body"><div class="c-label">Kesalahan paling sering</div><div class="c-text">Edit langsung kode di server / DGX yang dipakai pipeline production, tanpa commit dan tanpa kabar ke DE. Kalau hasilnya salah, tidak ada yang tahu apa yang berubah dan tidak bisa di-rollback.</div></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Jenis perubahan — tingkat risiko berbeda</div>
+    <table>
+      <tr><th>Jenis</th><th>Contoh</th><th>Risiko</th><th>Wajib dikabari / approve</th></tr>
+      <tr><td><strong>Bug fix</strong></td><td>Filter tanggal salah, NaN tidak tertangani</td><td>Rendah–sedang</td><td>Senior / PIC</td></tr>
+      <tr><td><strong>Retrain model</strong></td><td>Data baru, kode &amp; fitur sama</td><td>Sedang</td><td>Senior / PIC, klien kalau metrik turun</td></tr>
+      <tr><td><strong>Ubah logika bisnis</strong></td><td>Definisi churn 30 → 60 hari, threshold risk label</td><td>Tinggi</td><td>Klien / user bisnis + senior</td></tr>
+      <tr><td><strong>Ubah format output</strong></td><td>Rename / tambah / hapus kolom, ganti tabel tujuan</td><td>Tinggi</td><td>DE + pemilik dashboard <strong>sebelum</strong> dikerjakan</td></tr>
+      <tr><td><strong>Ganti model / fitur</strong></td><td>LightGBM → XGBoost, tambah 10 fitur</td><td>Tinggi</td><td>Senior + klien, evaluasi ulang lengkap</td></tr>
+      <tr><td><strong>Upgrade library</strong></td><td>pandas / scikit-learn versi baru</td><td>Sedang</td><td>Senior + DE (environment mereka ikut berubah)</td></tr>
+      <tr><td><strong>Perubahan dari hulu</strong></td><td>Tabel input BQ ganti skema / nama kolom</td><td>Tinggi</td><td>Koordinasi dengan DE pemilik tabel</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Alur perubahan — dari request sampai live</div>
+    <ol class="steps">
+      <li><div class="step-num">1</div><div class="step-body"><div class="step-title">Catat request-nya</div><div class="step-desc">Siapa yang minta, apa yang diminta, alasannya, dan deadline. Simpan di issue Git / tracker tim / dokumen project — jangan hanya di chat pribadi.</div></div></li>
+      <li><div class="step-num">2</div><div class="step-body"><div class="step-title">Cek dampaknya (impact assessment)</div><div class="step-desc">Jawab sebelum mulai coding: tabel / file output mana yang berubah? Siapa yang memakai output itu (DE, dashboard, klien)? Apakah format kolom ikut berubah? Apakah angka historis jadi tidak sebanding?</div></div></li>
+      <li><div class="step-num">3</div><div class="step-body"><div class="step-title">Kerjakan di branch, bukan di main</div><div class="step-desc">
+        <div class="code-wrap"><pre>git checkout main &amp;&amp; git pull
+git checkout -b fix/filter-tanggal-budi        # atau update/... sesuai jenis</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      </div></div></li>
+      <li><div class="step-num">4</div><div class="step-body"><div class="step-title">Test di luar production</div><div class="step-desc">Arahkan output ke tabel / folder terpisah lewat config, mis. <code>ds_results_dev.tokopedia_churn_predictions</code>. Jangan pernah test dengan menulis ke tabel yang sedang dipakai dashboard.</div></div></li>
+      <li><div class="step-num">5</div><div class="step-body"><div class="step-title">Bandingkan output lama vs baru</div><div class="step-desc">
+        Pastikan yang berubah <em>hanya</em> yang memang dimaksud:
+        <div class="code-wrap"><pre>old = pd.read_gbq("SELECT * FROM ds_results.tokopedia_churn_predictions")
+new = pd.read_gbq("SELECT * FROM ds_results_dev.tokopedia_churn_predictions")
+
+print("Jumlah baris  :", len(old), "→", len(new))
+print("Kolom hilang  :", set(old.columns) - set(new.columns))
+print("Kolom baru    :", set(new.columns) - set(old.columns))
+
+merged = old.merge(new, on='user_id', suffixes=('_old', '_new'))
+diff = (merged['pred_proba_old'] - merged['pred_proba_new']).abs()
+print("User berubah skor &gt; 0.05:", (diff &gt; 0.05).sum())
+print(merged.groupby(['risk_label_old', 'risk_label_new']).size())   # perpindahan label</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+        Tempel ringkasan hasil perbandingan ini saat minta review — reviewer tidak perlu menjalankan ulang.
+      </div></div></li>
+      <li><div class="step-num">6</div><div class="step-body"><div class="step-title">Review &amp; approval</div><div class="step-desc">Sesuai tabel di atas. Kalau format output berubah, DE harus setuju <strong>sebelum</strong> merge — bukan diberi tahu setelah pipeline mereka error.</div></div></li>
+      <li><div class="step-num">7</div><div class="step-body"><div class="step-title">Release: merge, beri versi, update dokumen</div><div class="step-desc">Merge ke main, tambahkan entri di <code>CHANGELOG.md</code>, beri tag versi, dan update dokumen yang terdampak: <code>README.md</code>, <code>handoff_notes.md</code>, <code>requirements.txt</code>.</div></div></li>
+      <li><div class="step-num">8</div><div class="step-body"><div class="step-title">Pantau run pertama setelah perubahan</div><div class="step-desc">Cek log dan kriteria sukses (jumlah baris, range nilai) di run terjadwal berikutnya bersama DE. Perubahan dianggap selesai setelah run pertama sukses, bukan saat merge.</div></div></li>
+    </ol>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Versi &amp; CHANGELOG.md</div>
+    <div class="card">
+      <div class="card-title">Format versi: <code>vMAJOR.MINOR.PATCH</code></div>
+      <table style="margin:8px 0 0">
+        <tr><th>Naik</th><th>Kapan</th><th>Contoh</th><th>Dampak ke DE / user</th></tr>
+        <tr><td><strong>PATCH</strong> v1.0.<strong>1</strong></td><td>Bug fix, format output tidak berubah</td><td>Perbaikan filter tanggal</td><td>Tidak perlu ubah apa pun</td></tr>
+        <tr><td><strong>MINOR</strong> v1.<strong>1</strong>.0</td><td>Retrain, tambah kolom baru, upgrade library</td><td>Tambah kolom <code>segment</code></td><td>Kolom lama tetap aman</td></tr>
+        <tr><td><strong>MAJOR</strong> v<strong>2</strong>.0.0</td><td>Kolom dihapus / di-rename, logika bisnis berubah</td><td>Definisi churn 30 → 60 hari</td><td>DE &amp; dashboard <strong>wajib</strong> menyesuaikan</td></tr>
+      </table>
+    </div>
+    <div class="code-wrap"><pre># CHANGELOG.md
+
+## v1.1.0 — 2025-04-10
+**Diminta oleh:** Tim CRM ([Nama])  |  **Dikerjakan:** [Nama DS]  |  **Approve:** [Nama senior]
+- Retrain model dengan data s.d. Maret 2025 (AUC 0.84 → 0.86)
+- Tambah kolom `segment` di output (kolom lama tidak berubah)
+- Upgrade scikit-learn 1.4.2 → 1.5.0
+- Model: model_20250410_0900.pkl
+
+## v1.0.1 — 2025-03-20
+- Fix: filter tanggal tidak mengikutsertakan hari terakhir bulan
+
+## v1.0.0 — 2025-03-01
+- Rilis pertama ke production</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+    <div class="code-wrap"><pre># Beri tag versi setelah merge ke main
+git tag -a v1.1.0 -m "retrain Maret 2025 + kolom segment"
+git push origin v1.1.0
+
+# Lihat kode persis di versi tertentu (mis. untuk investigasi)
+git checkout v1.0.1</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Siapkan rencana rollback sebelum release</div>
+    <div class="card">
+      <div class="card-desc">Selalu jawab pertanyaan ini sebelum merge: <strong>"Kalau hasilnya ternyata salah, bagaimana kembali ke versi sebelumnya dalam 15 menit?"</strong>
+        <ul style="margin:8px 0 0 18px;display:grid;gap:4px">
+          <li><strong>Kode:</strong> <code>git revert</code> commit perubahan, atau jalankan ulang dari tag versi sebelumnya</li>
+          <li><strong>Model:</strong> model lama masih ada di <code>outputs/models/</code> (audit trail) — kembalikan ke <code>model_latest.pkl</code></li>
+          <li><strong>Tabel output:</strong> backup sebelum ditimpa, mis. <code>CREATE TABLE ..._backup_20250410 AS SELECT * FROM ...</code></li>
+          <li><strong>Library:</strong> <code>requirements.txt</code> versi lama ada di Git — <code>pip install -r</code> dari versi sebelumnya</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">BOT vs BOM — siapa yang mengerjakan perubahan?</div>
+    <div class="two-col">
+      <div class="card" style="margin:0">
+        <div class="card-title">BOT — setelah transfer</div>
+        <div class="card-desc">Penerima (klien / DE) yang memegang kode. Kalau mereka minta bantuan, perubahan dikerjakan di repo <em>mereka</em> dan tetap mengikuti alur di atas. Pastikan scope bantuan setelah transfer sudah disepakati — di luar itu perlu request baru.</div>
+      </div>
+      <div class="card" style="margin:0">
+        <div class="card-title">BOM — selama periode manage</div>
+        <div class="card-desc">DS bertanggung jawab penuh atas perubahan. Semua perubahan wajib tercatat di CHANGELOG, karena klien bisa bertanya <em>"kenapa angka bulan ini beda?"</em> kapan saja. Perubahan besar dijadwalkan di luar jam run pipeline.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Checklist sebelum release perubahan</div>
+    <div class="card">
+      <div style="display:grid;gap:6px;font-size:13px">
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span>Request <strong>tercatat</strong> — siapa yang minta dan kenapa</span></label>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span>Dikerjakan di <strong>branch</strong>, ditest dengan output ke tabel / folder <strong>dev</strong></span></label>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span><strong>Output lama vs baru</strong> sudah dibandingkan — yang berubah hanya yang dimaksud</span></label>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span>Kalau format output berubah — <strong>DE sudah setuju</strong> sebelum merge</span></label>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span><strong>CHANGELOG.md</strong>, README, handoff_notes, dan requirements.txt sudah diperbarui</span></label>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span><strong>Tag versi</strong> sudah dibuat dan di-push</span></label>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span><strong>Rencana rollback</strong> siap — model lama &amp; backup tabel tersedia</span></label>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--text)"><span>Ada yang <strong>memantau run pertama</strong> setelah perubahan</span></label>
       </div>
     </div>
   </div>
@@ -3778,7 +4143,7 @@ git push origin main</pre><button class="copy-btn" onclick="cp(this)">Copy</butt
     <div class="cl-item"><input type="checkbox" class="cl-cb" id="c5" onchange="tick()"><label class="cl-text" for="c5"><div class="cl-main">Tidak ada credentials yang ditulis langsung di kode</div><div class="cl-hint">Tidak ada <code>project_id = "nama-project"</code> atau <code>password = "abc"</code>. Pakai <code>.env</code> dan <code>os.getenv()</code>.</div></label><span class="cl-badge w">Wajib</span></div>
     <div class="cl-item"><input type="checkbox" class="cl-cb" id="c6" onchange="tick()"><label class="cl-text" for="c6"><div class="cl-main">Semua variabel punya nama yang bermakna</div><div class="cl-hint">Tidak ada <code>df</code>, <code>df2</code>, <code>temp</code>, <code>x</code>. Ganti dengan nama deskriptif seperti <code>df_transaksi_clean</code>.</div></label><span class="cl-badge w">Wajib</span></div>
     <div class="cl-item"><input type="checkbox" class="cl-cb" id="c7" onchange="tick()"><label class="cl-text" for="c7"><div class="cl-main">Nama folder project: <code>[tahunbulan]_[klien]_[topik]</code></div><div class="cl-hint">Contoh benar: <code>202501_tokopedia_churn</code>. Format tahunbulan (YYYYMM) di depan agar mudah di-sort. Hindari spasi, huruf kapital, dan nama generik.</div></label><span class="cl-badge w">Wajib</span></div>
-    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c8" onchange="tick()"><label class="cl-text" for="c8"><div class="cl-main">Ada README.md yang menjelaskan project</div><div class="cl-hint">Minimal: tujuan project, sumber data, cara menjalankan notebook.</div></label><span class="cl-badge w">Wajib</span></div>
+    <div class="cl-item"><input type="checkbox" class="cl-cb" id="c8" onchange="tick()"><label class="cl-text" for="c8"><div class="cl-main">Ada README.md yang menjelaskan project</div><div class="cl-hint">Minimal: tujuan project, sumber data, setup environment, cara menjalankan notebook. Versi library di requirements.txt dikunci dengan <code>==</code>.</div></label><span class="cl-badge w">Wajib</span></div>
     <div class="cl-item"><input type="checkbox" class="cl-cb" id="c9" onchange="tick()"><label class="cl-text" for="c9"><div class="cl-main">File <code>.env</code> dan <code>.json</code> tidak masuk ke Git</div><div class="cl-hint">Cek <code>git status</code> — tidak ada <code>.env</code> atau <code>.json</code> di staged files. Sudah ada di <code>.gitignore</code>.</div></label><span class="cl-badge w">Wajib</span></div>
   </div>
 
@@ -4024,6 +4389,10 @@ function nav(id, el) {
   el.classList.add('active');
   window.scrollTo(0, 0);
   if (id === 'quiz' && quizAnswers.length === 0 && quizIdx === 0) quizRender();
+}
+
+function goto(id) {
+  nav(id, document.querySelector(`.nav-item[onclick*="'${id}'"]`));
 }
 
 // tabs
