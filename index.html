@@ -1708,30 +1708,23 @@ python -m ipykernel install --user --name 202501_tokopedia_churn</pre><button cl
         Lalu pilih kernel <code>202501_tokopedia_churn</code> di notebook.
       </div></div></li>
       <li><div class="step-num">4</div><div class="step-body"><div class="step-title">Verifikasi — versi terpasang sudah sesuai?</div><div class="step-desc">
-        Simpan sebagai <code>src/check_env.py</code>, jalankan setiap kali setup ulang atau sebelum handoff:
+        Jalankan <code>python src/check_env.py</code> setiap kali setup ulang atau sebelum handoff. Script mencetak library yang versinya beda dari requirements.txt.
+        <details style="margin-top:8px"><summary style="cursor:pointer;font-size:12px;color:var(--text2)">Lihat isi <code>src/check_env.py</code></summary>
         <div class="code-wrap"><pre>"""Bandingkan versi library terpasang dengan requirements.txt."""
-import sys
 from importlib.metadata import version, PackageNotFoundError
 from pathlib import Path
 
-req_file = Path(__file__).resolve().parents[1] / 'requirements.txt'
-print(f"Python {sys.version.split()[0]}")
-
-mismatch = 0
-for line in req_file.read_text().splitlines():
-    line = line.split('#')[0].strip()
-    if '==' not in line:
-        continue
-    name, expected = line.split('==')
-    try:
-        installed = version(name)
-    except PackageNotFoundError:
-        installed = 'TIDAK ADA'
+req = Path(__file__).resolve().parents[1] / 'requirements.txt'
+beda = 0
+for line in req.read_text().splitlines():
+    if '==' not in line.split('#')[0]: continue
+    name, expected = line.split('#')[0].strip().split('==')
+    try: installed = version(name)
+    except PackageNotFoundError: installed = 'TIDAK ADA'
     if installed != expected:
-        mismatch += 1
-        print(f"✗ {name}: requirements {expected}, terpasang {installed}")
-
-print("✓ Semua versi sesuai" if mismatch == 0 else f"{mismatch} library tidak sesuai — jalankan: pip install -r requirements.txt")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+        beda += 1; print(f"✗ {name}: harus {expected}, terpasang {installed}")
+print("✓ Semua versi sesuai" if beda == 0 else "→ jalankan: pip install -r requirements.txt")</pre><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+        </details>
       </div></div></li>
     </ol>
 
